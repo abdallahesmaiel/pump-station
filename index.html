@@ -851,21 +851,19 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        // نظام حفظ البيانات تلقائياً
-const STORAGE_KEY = 'pump_station_data_v2';
+       // نظام حفظ البيانات تلقائياً (بدون إشعارات)
+const STORAGE_KEY = 'pump_station_data_v3';
 
-// دالة لحفظ جميع البيانات
+// دالة لحفظ جميع البيانات (صامتة)
 function saveAllData() {
     const data = {
-        // حفظ بيانات الرأس
         stationName: document.getElementById('station-name').value,
         operatorName: document.getElementById('operator-name').value,
         recordDate: document.getElementById('record-date').value,
         shift: document.getElementById('shift').value,
         
-        // حفظ بيانات الجدول
         tableData: {},
-        // حفظ بيانات الإضافية
+        
         waterPath: document.getElementById('waterPath').value,
         tank1Level: document.getElementById('tank1Level').value,
         tank2Level: document.getElementById('tank2Level').value,
@@ -878,25 +876,39 @@ function saveAllData() {
         totalHours: document.getElementById('totalHours').value,
         dailyNotes: document.getElementById('dailyNotes').value,
         
-        // حفظ توقيت الحفظ
-        lastSaved: new Date().toISOString()
+        lastSaved: new Date().toISOString(),
+        version: 'v3'
     };
     
     // جمع بيانات الجدول
     document.querySelectorAll('.data-input').forEach(input => {
-        if (input.value.trim() !== '') {
-            data.tableData[input.id] = input.value;
+        const value = input.value.trim();
+        if (value !== '') {
+            data.tableData[input.id] = value;
         }
     });
     
-    // حفظ في localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    
-    // إظهار إشعار صغير (اختياري)
-    showAutoSaveNotification();
+    // حفظ في localStorage (بدون إشعارات)
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        updateLastSaveTime(); // تحديث وقت الحفظ الأخير فقط
+    } catch (error) {
+        console.log('تم الحفظ تلقائياً');
+    }
 }
 
-// دالة لتحميل البيانات المحفوظة
+// تحديث وقت الحفظ الأخير (دون إظهار)
+function updateLastSaveTime() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+    
+    // تحديث تلميح صغير فقط في console للمطورين
+    if (console && typeof console.log === 'function') {
+        console.log(`تم الحفظ تلقائياً: ${timeStr}`);
+    }
+}
+
+// دالة لتحميل البيانات المحفوظة (صامتة)
 function loadSavedData() {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (!savedData) return false;
@@ -905,10 +917,10 @@ function loadSavedData() {
         const data = JSON.parse(savedData);
         
         // تحميل بيانات الرأس
-        if (data.stationName) document.getElementById('station-name').value = data.stationName;
-        if (data.operatorName) document.getElementById('operator-name').value = data.operatorName;
-        if (data.recordDate) document.getElementById('record-date').value = data.recordDate;
-        if (data.shift) document.getElementById('shift').value = data.shift;
+        document.getElementById('station-name').value = data.stationName || '';
+        document.getElementById('operator-name').value = data.operatorName || '';
+        document.getElementById('record-date').value = data.recordDate || '';
+        document.getElementById('shift').value = data.shift || 'صباحية';
         
         // تحميل بيانات الجدول
         if (data.tableData) {
@@ -919,335 +931,234 @@ function loadSavedData() {
         }
         
         // تحميل البيانات الإضافية
-        if (data.waterPath) document.getElementById('waterPath').value = data.waterPath;
-        if (data.tank1Level) document.getElementById('tank1Level').value = data.tank1Level;
-        if (data.tank2Level) document.getElementById('tank2Level').value = data.tank2Level;
-        if (data.tank3Level) document.getElementById('tank3Level').value = data.tank3Level;
-        if (data.compressor1) document.getElementById('compressor1').value = data.compressor1;
-        if (data.compressor2) document.getElementById('compressor2').value = data.compressor2;
-        if (data.com) document.getElementById('com').value = data.com;
-        if (data.startTime) document.getElementById('startTime').value = data.startTime;
-        if (data.endTime) document.getElementById('endTime').value = data.endTime;
-        if (data.totalHours) document.getElementById('totalHours').value = data.totalHours;
-        if (data.dailyNotes) document.getElementById('dailyNotes').value = data.dailyNotes;
+        document.getElementById('waterPath').value = data.waterPath || '';
+        document.getElementById('tank1Level').value = data.tank1Level || '';
+        document.getElementById('tank2Level').value = data.tank2Level || '';
+        document.getElementById('tank3Level').value = data.tank3Level || '';
+        document.getElementById('compressor1').value = data.compressor1 || '';
+        document.getElementById('compressor2').value = data.compressor2 || '';
+        document.getElementById('com').value = data.com || '';
+        document.getElementById('startTime').value = data.startTime || '06:00';
+        document.getElementById('endTime').value = data.endTime || '24:00';
+        document.getElementById('totalHours').value = data.totalHours || '';
+        document.getElementById('dailyNotes').value = data.dailyNotes || '';
         
-        // إظهار رسالة أن البيانات تم تحميلها
-        if (data.lastSaved) {
-            const lastSaveDate = new Date(data.lastSaved);
-            const now = new Date();
-            const diffHours = Math.floor((now - lastSaveDate) / (1000 * 60 * 60));
-            
-            let timeMsg = 'الآن';
-            if (diffHours > 0) {
-                timeMsg = `منذ ${diffHours} ساعة`;
-            }
-            
-            showNotification(`تم استعادة البيانات المحفوظة ${timeMsg}`);
-        }
+        // حساب الساعات تلقائياً بعد التحميل
+        setTimeout(calculateTotalHours, 100);
         
         return true;
     } catch (error) {
-        console.error('خطأ في تحميل البيانات:', error);
         return false;
     }
 }
 
-// إظهار إشعار الحفظ التلقائي
-function showAutoSaveNotification() {
-    // إنشاء عنصر الإشعار إذا لم يكن موجوداً
-    let notification = document.getElementById('autoSaveNotification');
-    if (!notification) {
-        notification = document.createElement('div');
-        notification.id = 'autoSaveNotification';
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 10000;
-            font-size: 14px;
-            display: none;
-            animation: fadeInOut 2s ease-in-out;
-        `;
-        document.body.appendChild(notification);
-        
-        // إضافة animation للـ CSS
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeInOut {
-                0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-                20% { opacity: 1; transform: translateX(-50%) translateY(0); }
-                80% { opacity: 1; transform: translateX(-50%) translateY(0); }
-                100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-            }
-        `;
-        document.head.appendChild(style);
+// مراقبة تغييرات الحقول وحفظها تلقائياً (بدون إشعارات)
+function setupAutoSave() {
+    // استخدام Debounce لتقليل مرات الحفظ
+    let saveTimeout;
+    function debouncedSave() {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveAllData, 1000); // تأخير ثانية واحدة
     }
     
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-    notification.textContent = `✓ تم حفظ البيانات تلقائياً ${timeStr}`;
-    notification.style.display = 'block';
+    // مراقبة جميع حقول الإدخال
+    const inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', debouncedSave);
+        input.addEventListener('change', debouncedSave);
+        input.addEventListener('blur', debouncedSave);
+    });
     
-    // إخفاء الإشعار بعد 2 ثانية
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 2000);
-}
-
-// إظهار إشعار عام
-function showNotification(message) {
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #2196F3;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 5px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        z-index: 10000;
-        font-size: 14px;
-        animation: slideDown 0.3s ease-out;
-    `;
-    
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateX(-50%) translateY(-30px); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    // مراقبة الأزرار (باستثناء أزرار الطباعة والتصدير)
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(btn => {
+        if (!btn.id.includes('print') && !btn.id.includes('export')) {
+            btn.addEventListener('click', debouncedSave);
         }
-    `;
-    document.head.appendChild(style);
+    });
     
-    notification.textContent = message;
-    document.body.appendChild(notification);
+    // حفظ تلقائي كل دقيقة (كإحتياطي صامت)
+    setInterval(saveAllData, 60000);
     
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transition = 'opacity 0.5s';
-        setTimeout(() => notification.remove(), 500);
-    }, 3000);
+    // حفظ عند مغادرة الصفحة
+    window.addEventListener('beforeunload', saveAllData);
+    window.addEventListener('pagehide', saveAllData);
+    
+    // حفظ عند تغيير التبويب
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) saveAllData();
+    });
 }
 
-// إضافة زر لمسح البيانات المحفوظة
-function addClearDataButton() {
+// تعديل دالة إعادة التعيين لحفظ نسخة احتياطية
+document.getElementById("resetBtn").addEventListener("click", function(e) {
+    if (confirm("هل تريد إعادة تعيين جميع البيانات؟")) {
+        // حفظ نسخة احتياطية قبل المسح
+        const backupData = localStorage.getItem(STORAGE_KEY);
+        if (backupData) {
+            const backupKey = 'pump_backup_' + new Date().getTime();
+            localStorage.setItem(backupKey, backupData);
+        }
+        
+        // تنفيذ الإعادة الأصلية
+        document.getElementById("station-name").value = "محطة الضخ الرئيسية";
+        document.getElementById("operator-name").value = "";
+        document.getElementById("record-date").valueAsDate = new Date();
+        document.getElementById("shift").value = "صباحية";
+
+        document.getElementById("waterPath").value = "";
+        document.getElementById("tank1Level").value = "";
+        document.getElementById("tank2Level").value = "";
+        document.getElementById("tank3Level").value = "";
+        document.getElementById("compressor1").value = "";
+        document.getElementById("compressor2").value = "";
+        document.getElementById("com").value = "";
+        document.getElementById("startTime").value = "06:00";
+        document.getElementById("endTime").value = "24:00";
+        document.getElementById("totalHours").value = "";
+        document.getElementById("dailyNotes").value = "";
+
+        document.querySelectorAll('.data-input').forEach(input => {
+            input.value = "";
+        });
+
+        while (pumpUnits.length > 3) {
+            pumpUnits.pop();
+        }
+
+        generateTable();
+        calculateTotalHours();
+        
+        // حفظ الحالة الجديدة
+        setTimeout(saveAllData, 1000);
+    }
+});
+
+// إضافة زر لاستعادة النسخة الاحتياطية (اختياري)
+function addRestoreBackupButton() {
+    const controls = document.querySelector('.controls');
+    if (!controls) return;
+    
+    // البحث عن نسخ احتياطية
+    const backups = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('pump_backup_')) {
+            backups.push(key);
+        }
+    }
+    
+    if (backups.length > 0) {
+        const restoreBtn = document.createElement('button');
+        restoreBtn.className = 'btn btn-secondary';
+        restoreBtn.innerHTML = '<i class="fas fa-history"></i> استعادة نسخة سابقة';
+        restoreBtn.style.background = '#FF9800';
+        restoreBtn.style.marginTop = '10px';
+        
+        restoreBtn.addEventListener('click', function() {
+            if (backups.length === 1) {
+                // إذا كان هناك نسخة واحدة فقط
+                if (confirm('هل تريد استعادة النسخة الاحتياطية السابقة؟')) {
+                    const backupData = localStorage.getItem(backups[0]);
+                    try {
+                        const data = JSON.parse(backupData);
+                        localStorage.setItem(STORAGE_KEY, backupData);
+                        location.reload(); // إعادة تحميل الصفحة لتحميل البيانات
+                    } catch (error) {
+                        alert('خطأ في استعادة النسخة الاحتياطية');
+                    }
+                }
+            } else {
+                // إذا كان هناك أكثر من نسخة
+                const backupList = backups.map(key => {
+                    const time = parseInt(key.split('_')[2]);
+                    return new Date(time).toLocaleString('ar-EG');
+                }).join('\n');
+                
+                if (confirm(`يوجد ${backups.length} نسخ احتياطية:\n${backupList}\n\nهل تريد استعادة أحدث نسخة؟`)) {
+                    const latestBackup = backups.sort().pop(); // أحدث نسخة
+                    const backupData = localStorage.getItem(latestBackup);
+                    localStorage.setItem(STORAGE_KEY, backupData);
+                    location.reload();
+                }
+            }
+        });
+        
+        // إضافة الزر في مجموعة الأزرار الثانية
+        const btnGroups = controls.querySelectorAll('.btn-group');
+        if (btnGroups.length > 1) {
+            btnGroups[1].appendChild(restoreBtn);
+        }
+    }
+}
+
+// إضافة زر لحذف جميع البيانات المحفوظة
+function addClearAllDataButton() {
     const controls = document.querySelector('.controls');
     if (!controls) return;
     
     const clearBtn = document.createElement('button');
     clearBtn.className = 'btn btn-secondary';
-    clearBtn.innerHTML = '<i class="fas fa-trash-alt"></i> مسح البيانات المحفوظة';
-    clearBtn.id = 'clearStorageBtn';
+    clearBtn.innerHTML = '<i class="fas fa-trash"></i> حذف كل البيانات المحفوظة';
+    clearBtn.style.background = '#f44336';
     clearBtn.style.marginTop = '10px';
     
     clearBtn.addEventListener('click', function() {
-        if (confirm('هل تريد مسح جميع البيانات المحفوظة على هذا المتصفح؟\n\n⚠️ تحذير: هذا الإجراء لا يمكن التراجع عنه.')) {
-            localStorage.removeItem(STORAGE_KEY);
-            showNotification('تم مسح جميع البيانات المحفوظة بنجاح');
+        if (confirm('⚠️ تحذير: هذا سيحذف جميع البيانات المحفوظة على هذا المتصفح.\nهل أنت متأكد؟')) {
+            // حذف جميع بيانات المشروع
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.includes('pump_') || key.includes('pump_station')) {
+                    localStorage.removeItem(key);
+                }
+            }
             
             // إعادة تعيين النموذج
             document.getElementById("resetBtn").click();
+            
+            // رسالة تأكيد بسيطة
+            setTimeout(() => {
+                alert('تم حذف جميع البيانات المحفوظة');
+            }, 500);
         }
     });
     
-    // إضافة الزر بعد مجموعة الأزرار الثانية
+    // إضافة الزر في مجموعة الأزرار الثانية
     const btnGroups = controls.querySelectorAll('.btn-group');
     if (btnGroups.length > 1) {
         btnGroups[1].appendChild(clearBtn);
     }
 }
 
-// مراقبة تغييرات الحقول وحفظها تلقائياً
-function setupAutoSave() {
-    // مراقبة جميع حقول الإدخال
-    const inputs = document.querySelectorAll('input, select, textarea');
-    inputs.forEach(input => {
-        // استخدام 'input' event بدلاً من 'change' للاستجابة الفورية
-        input.addEventListener('input', function() {
-            setTimeout(saveAllData, 100); // تأخير بسيط لتجنب كثرة الحفظ
-        });
-        
-        // إضافة event listener للـ blur أيضاً
-        input.addEventListener('blur', saveAllData);
-    });
-    
-    // مراقبة الأزرار أيضاً
-    const buttons = document.querySelectorAll('.btn');
-    buttons.forEach(btn => {
-        if (!btn.id.includes('clearStorage')) {
-            btn.addEventListener('click', function() {
-                setTimeout(saveAllData, 500);
-            });
-        }
-    });
-    
-    // حفظ تلقائي كل 30 ثانية أيضاً (كإحتياطي)
-    setInterval(saveAllData, 30000);
-}
-
-// دالة لعرض حالة الحفظ
-function showSaveStatus() {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) {
-        const data = JSON.parse(savedData);
-        const lastSave = new Date(data.lastSaved);
-        const now = new Date();
-        const diffMinutes = Math.floor((now - lastSave) / (1000 * 60));
-        
-        let statusText = 'لا توجد بيانات محفوظة';
-        let statusColor = '#ccc';
-        
-        if (diffMinutes < 1) {
-            statusText = 'البيانات محفوظة الآن';
-            statusColor = '#4CAF50';
-        } else if (diffMinutes < 60) {
-            statusText = `محفوظة منذ ${diffMinutes} دقيقة`;
-            statusColor = '#2196F3';
-        } else {
-            const hours = Math.floor(diffMinutes / 60);
-            statusText = `محفوظة منذ ${hours} ساعة`;
-            statusColor = '#FF9800';
-        }
-        
-        // إضافة مؤشر الحفظ
-        const statusIndicator = document.createElement('div');
-        statusIndicator.id = 'saveStatusIndicator';
-        statusIndicator.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: ${statusColor};
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            z-index: 1000;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-        `;
-        
-        statusIndicator.innerHTML = `
-            <i class="fas fa-save"></i>
-            <span>${statusText}</span>
-        `;
-        
-        statusIndicator.addEventListener('click', function() {
-            saveAllData();
-            showAutoSaveNotification();
-        });
-        
-        // إزالة المؤشر القديم إذا كان موجوداً
-        const oldIndicator = document.getElementById('saveStatusIndicator');
-        if (oldIndicator) oldIndicator.remove();
-        
-        document.body.appendChild(statusIndicator);
-    }
-}
-
 // عند تحميل الصفحة
 document.addEventListener("DOMContentLoaded", function() {
-    // تحميل البيانات المحفوظة أولاً
+    // تحميل البيانات المحفوظة تلقائياً (بدون إشعارات)
     setTimeout(() => {
-        const hasLoaded = loadSavedData();
+        loadSavedData();
         
         // إعداد الحفظ التلقائي
         setupAutoSave();
         
-        // إضافة زر مسح البيانات
-        addClearDataButton();
+        // إضافة أزرار التحكم (اختياري)
+        addRestoreBackupButton();
+        addClearAllDataButton();
         
-        // عرض حالة الحفظ
-        showSaveStatus();
-        setInterval(showSaveStatus, 60000); // تحديث كل دقيقة
-        
-        // إشعار ترحيبي
-        if (hasLoaded) {
-            setTimeout(() => {
-                showNotification('تم استعادة بياناتك السابقة تلقائياً');
-            }, 1500);
-        }
-        
-        // إضافة زر لحفظ يدوي
-        addManualSaveButton();
-        
-    }, 500);
+    }, 100);
 });
 
-// إضافة زر للحفظ اليدوي
-function addManualSaveButton() {
-    const controls = document.querySelector('.controls');
-    if (!controls) return;
-    
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'btn btn-success';
-    saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ يدوي';
-    saveBtn.id = 'manualSaveBtn';
-    saveBtn.style.background = '#9C27B0';
-    
-    saveBtn.addEventListener('click', function() {
-        saveAllData();
-        showNotification('تم حفظ البيانات بنجاح ✓');
-    });
-    
-    // إضافة الزر في مجموعة الأزرار الأولى
-    const btnGroups = controls.querySelectorAll('.btn-group');
-    if (btnGroups.length > 0) {
-        btnGroups[0].appendChild(saveBtn);
-    }
-}
-
-// استبدال دالة إعادة التعيين الأصلية لحفظ قبل المسح
-const originalReset = document.getElementById("resetBtn").onclick;
-document.getElementById("resetBtn").addEventListener("click", function(e) {
-    if (confirm("هل تريد إعادة تعيين جميع البيانات؟\n\nملاحظة: البيانات الحالية سيتم حفظها تلقائياً قبل المسح.")) {
-        // حفظ البيانات الحالية قبل المسح (كنسخة احتياطية)
-        const backupKey = 'pump_station_backup_' + new Date().getTime();
-        const currentData = localStorage.getItem(STORAGE_KEY);
-        if (currentData) {
-            localStorage.setItem(backupKey, currentData);
-        }
-        
-        // تنفيذ الإعادة الأصلية
-        if (typeof originalReset === 'function') {
-            originalReset.call(this, e);
-        }
-        
-        // حفظ الحالة الفارغة
-        setTimeout(saveAllData, 1000);
-        
-        alert("تم إعادة تعيين النموذج بنجاح\nالبيانات القديمة محفوظة كنسخة احتياطية");
-    }
-});
-
-// حفظ البيانات عند مغادرة الصفحة
-window.addEventListener('beforeunload', function(e) {
+// تعديل دالة التصدير لـ Excel لتحميل آخر البيانات المحفوظة
+const originalExportToExcel = exportToExcel;
+exportToExcel = function() {
+    // التأكد من حفظ البيانات الحالية قبل التصدير
     saveAllData();
     
-    // رسالة تأكيد للمستخدم (اختياري)
-    // e.preventDefault();
-    // e.returnValue = 'هل تريد مغادرة الصفحة؟ البيانات سيتم حفظها تلقائياً.';
-});
+    // تنفيذ التصدير الأصلي
+    return originalExportToExcel();
+};
 
-// حفظ البيانات عند إغلاق التبويب
-window.addEventListener('pagehide', saveAllData);
-
-// حفظ البيانات عند تغيير التبويب
-document.addEventListener('visibilitychange', function() {
-    if (document.hidden) {
-        saveAllData();
-    }
-});
+// استبدال event listener للتصدير
+document.getElementById("exportBtn").replaceEventListener = null;
+document.getElementById("exportBtn").addEventListener('click', exportToExcel);
         // تعيين التاريخ الحالي افتراضياً
         document.getElementById("record-date").valueAsDate = new Date();
 
@@ -1776,3 +1687,4 @@ document.addEventListener('visibilitychange', function() {
 
 
 </html>
+
