@@ -533,7 +533,7 @@ const GITHUB_INFO = {
     repo: "pump-station",
     
     // ⚠️ اقرأ الخطوة 2 للحصول على الـ Token ⚠️
-    token: "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",
+    token: "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",
     
     // اسم ملف البيانات (لا تغيره)
     file: "pump-data.json"
@@ -553,7 +553,7 @@ class SimpleGitHubDB {
         // التحقق من المعلومات
         const hasUsername = GITHUB_INFO.username && GITHUB_INFO.username !== "abdallahesmaiel";
         const hasRepo = GITHUB_INFO.repo && GITHUB_INFO.repo !== "pump-station";
-        const hasToken = GITHUB_INFO.token && GITHUB_INFO.token.startsWith("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");
+        const hasToken = GITHUB_INFO.token && GITHUB_INFO.token.startsWith("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");
         
         if (!hasToken) {
             console.error("❌ يرجى إدخال الـ Token الصحيح");
@@ -1065,6 +1065,7 @@ calculateTotalHours();
     </script>
 </body>
 </html>
+
 
 
 
