@@ -1640,6 +1640,79 @@
             }
             lastTouchEnd = now;
         }, false);
+        // اختبار اتصال GitHub
+async function testGitHubConnection() {
+    console.log("🔍 جاري اختبار الاتصال بـ GitHub...");
+    
+    // تأكد من المعلومات
+    console.log("📝 المعلومات المدخلة:");
+    console.log("- المستخدم:", GITHUB_INFO.username);
+    console.log("- المشروع:", GITHUB_INFO.repo);
+    console.log("- الـ Token:", GITHUB_INFO.token.substring(0, 10) + "...");
+    
+    try {
+        // اختبار بسيط
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_INFO.username}/${GITHUB_INFO.repo}`, {
+            headers: {
+                'Authorization': `token ${GITHUB_INFO.token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+        
+        console.log("📊 حالة الاستجابة:", response.status, response.statusText);
+        
+        if (response.status === 401) {
+            alert("❌ الـ Token غير صحيح أو منتهي الصلاحية");
+            return false;
+        }
+        
+        if (response.status === 404) {
+            alert("❌ المشروع غير موجود أو اسم المستخدم/المشروع خطأ");
+            return false;
+        }
+        
+        if (response.ok) {
+            alert("✅ الاتصال بـ GitHub ناجح!");
+            return true;
+        } else {
+            alert(`❌ خطأ غير معروف: ${response.status}`);
+            return false;
+        }
+        
+    } catch (error) {
+        console.error("❌ خطأ في الاتصال:", error);
+        alert("❌ لا يمكن الاتصال بـ GitHub - تأكد من الإنترنت");
+        return false;
+    }
+}
+
+// استدعاء الاختبار عند الضغط على Ctrl + T
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 't') {
+        testGitHubConnection();
+    }
+});
+
+// أو أضف زر اختبار
+setTimeout(() => {
+    const testBtn = document.createElement('button');
+    testBtn.innerHTML = '<i class="fas fa-wrench"></i> اختبار الاتصال';
+    testBtn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: #2196F3;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        z-index: 9999;
+    `;
+    testBtn.onclick = testGitHubConnection;
+    document.body.appendChild(testBtn);
+}, 2000);
     </script>
 </body>
 </html>
+
