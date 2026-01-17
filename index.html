@@ -13,106 +13,6 @@
             margin: 0;
             padding: 0;
         }
-        /* أضف في قسم الـ style في الـ head */
-
-/* إشعارات الحفظ */
-.save-notification {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #4CAF50;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 5px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    z-index: 10000;
-    font-size: 14px;
-    animation: slideDown 0.3s ease-out;
-    display: none;
-}
-
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-}
-
-@keyframes fadeInOut {
-    0% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-20px);
-    }
-    20% {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-    80% {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-    100% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-20px);
-    }
-}
-
-/* مؤشر الحفظ في الأسفل */
-#saveStatusIndicator {
-    transition: all 0.3s ease;
-}
-
-#saveStatusIndicator:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-}
-
-/* زر الحفظ اليدوي */
-#manualSaveBtn {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(156, 39, 176, 0.4);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(156, 39, 176, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(156, 39, 176, 0);
-    }
-}
-
-/* تنبيه للبيانات المحفوظة */
-.data-saved-alert {
-    position: fixed;
-    bottom: 70px;
-    right: 20px;
-    background: #FF9800;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 5px;
-    font-size: 12px;
-    z-index: 999;
-    animation: fadeIn 0.5s;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
         
         body {
             margin: 0;
@@ -672,6 +572,26 @@
             transform: scale(1.02);
             transition: transform 0.2s;
         }
+        
+        /* تخصيص لزر المشاركة */
+        #sharedDataBtn {
+            background: linear-gradient(45deg, #FF9800, #FF5722);
+            color: white;
+        }
+        
+        #sharedDataBtn:hover {
+            background: linear-gradient(45deg, #F57C00, #E64A19);
+        }
+        
+        /* تخصيص لزر المحطات */
+        #stationsListBtn {
+            background: linear-gradient(45deg, #9C27B0, #673AB7);
+            color: white;
+        }
+        
+        #stationsListBtn:hover {
+            background: linear-gradient(45deg, #7B1FA2, #5E35B1);
+        }
     </style>
 </head>
 
@@ -679,28 +599,29 @@
     <div class="container">
         <header>
             <h1>
-                <i class="fas fa-water"></i> سجل محطة نموزج 8 - نموذج إلكتروني
+                <i class="fas fa-water"></i> سجل محطة نموزج 8 - نظام مشترك
             </h1>
-            <p>نموذج الكتروني - مع إمكانية التصدير إلى Excel</p>
+            <p>نموذج إلكتروني - البيانات تظهر على جميع الأجهزة</p>
 
             <div class="header-info">
                 <div class="info-item">
-                    <label for="station-name">اسم المحطة:</label>
-                    <input type="text" id="station-name" value="" class="keyboard-text" placeholder="أدخل اسم المحطة" />
+                    <label for="station-name">🔍 اسم المحطة:</label>
+                    <input type="text" id="station-name" value="" class="keyboard-text" 
+                           placeholder="اكتب اسم المحطة (ستظهر لك البيانات السابقة)" />
                 </div>
                 <div class="header-name">
                     <div class="info-item">
-                        <label for="operator-name">اسم المشغل:</label>
-                        <input type="text" id="operator-name" value="" class="keyboard-text" placeholder="أدخل اسم المشغل" />
+                        <label for="operator-name">👤 اسم المشغل:</label>
+                        <input type="text" id="operator-name" value="" class="keyboard-text" placeholder="اسم المشغل" />
                     </div>
 
                     <div class="info-item">
-                        <label for="record-date">التاريخ:</label>
+                        <label for="record-date">📅 التاريخ:</label>
                         <input type="date" id="record-date" value="" />
                     </div>
 
                     <div class="info-item">
-                        <label for="shift">الوردية:</label>
+                        <label for="shift">🕐 الوردية:</label>
                         <select id="shift">
                             <option value="صباحية">صباحية</option>
                             <option value="مسائية">مسائية</option>
@@ -728,8 +649,19 @@
                     <i class="fas fa-print"></i> طباعة
                 </button>
             </div>
+            
+            <!-- الأزرار الجديدة للمشاركة -->
+            <div class="btn-group">
+                <button class="btn" id="sharedDataBtn" style="background: #FF9800;">
+                    <i class="fas fa-cloud-upload-alt"></i> حفظ للجميع
+                </button>
+                <button class="btn" id="stationsListBtn" style="background: #9C27B0;">
+                    <i class="fas fa-list"></i> المحطات المسجلة
+                </button>
+            </div>
         </div>
 
+        <!-- باقي النموذج كما هو -->
         <div class="time-slots">
             <div class="time-slot">6:00 ص</div>
             <div class="time-slot">11:00 ص</div>
@@ -745,7 +677,6 @@
                         <th rowspan="2">البيان</th>
                         <th colspan="5">القراءات حسب الوقت</th>
                     </tr>
-
                     <tr>
                         <th>6:00 ص</th>
                         <th>11:00 ص</th>
@@ -768,31 +699,27 @@
             <div class="footer-row">
                 <div class="footer-col">
                     <label>الطرق المائي:</label>
-                    <input type="text" id="waterPath" class="keyboard-text" placeholder="أدخل حالة الطرق المائي (طبيعي / غير طبيعي)" />
+                    <input type="text" id="waterPath" class="keyboard-text" placeholder="أدخل حالة الطرق المائي" />
                 </div>
-
                 <div class="footer-col">
                     <label>مستوي المياه بالخزان الأول:</label>
-                    <input type="text" id="tank1Level" class="keyboard-text" placeholder="أدخل المستوي (ممتلئ / متوسط / منخفض)" />
+                    <input type="text" id="tank1Level" class="keyboard-text" placeholder="أدخل المستوي" />
                 </div>
-
                 <div class="footer-col">
                     <label>مستوي المياه بالخزان الثاني:</label>
-                    <input type="text" id="tank2Level" class="keyboard-text" placeholder="أدخل المستوي (ممتلئ / متوسط / منخفض)" />
+                    <input type="text" id="tank2Level" class="keyboard-text" placeholder="أدخل المستوي" />
                 </div>
             </div>
 
             <div class="footer-row">
                 <div class="footer-col">
                     <label>مستوي المياه بالخزان الثالث:</label>
-                    <input type="text" id="tank3Level" class="keyboard-text" placeholder="أدخل المستوي (ممتلئ / متوسط / منخفض)" />
+                    <input type="text" id="tank3Level" class="keyboard-text" placeholder="أدخل المستوي" />
                 </div>
-
                 <div class="footer-col">
                     <label>مستوي الزيت بالضاغط الأول / درجة الحرارة:</label>
                     <input type="text" id="compressor1" class="keyboard-text" placeholder="مثال: جيد / 45°C" />
                 </div>
-
                 <div class="footer-col">
                     <label>مستوي الزيت بالضاغط الثاني / درجة الحرارة:</label>
                     <input type="text" id="compressor2" class="keyboard-text" placeholder="مثال: جيد / 42°C" />
@@ -805,7 +732,7 @@
 
             <div class="footer-col1">
                 <label>مستوي الزيت بالضاغط / درجة الحرارة:</label>
-                <input type="text" id="com" class="keyboard-text" placeholder="أدخل القراءة (مستوي زيت / درجة حرارة)" />
+                <input type="text" id="com" class="keyboard-text" placeholder="أدخل القراءة" />
             </div>
 
             <div class="section-tox">
@@ -817,352 +744,49 @@
                     <label>توقيت تشغيل المحطة:</label>
                     <input type="time" id="startTime" value="06:00" />
                 </div>
-
                 <div class="footer-col">
                     <label>توقيت إيقاف المحطة:</label>
                     <input type="time" id="endTime" value="24:00" />
                 </div>
-
                 <div class="footer-col">
                     <label>عدد ساعات تشغيل المحطة خلال اليوم:</label>
-                    <input type="text" id="totalHours" class="keyboard-number" placeholder="أدخل عدد الساعات" />
+                    <input type="text" id="totalHours" class="keyboard-number" placeholder="سيتم حسابه تلقائياً" />
                 </div>
             </div>
 
             <div class="notes">
                 <label for="dailyNotes">ملاحظات اليوم:</label>
-                <textarea id="dailyNotes" class="keyboard-text" placeholder="أدخل أي ملاحظات هامة عن تشغيل المحطة اليوم (مشاكل، إصلاحات، صيانة، ...)"></textarea>
+                <textarea id="dailyNotes" class="keyboard-text" 
+                          placeholder="أدخل أي ملاحظات هامة عن تشغيل المحطة اليوم..."></textarea>
             </div>
         </div>
 
-        <div style="
-            text-align: center;
-            margin-top: 25px;
-            color: #666;
-            font-size: 14px;
-            padding: 10px;
-            border-top: 1px solid #eee;
-        ">
-            <p>
-                تم إنشاء هذا النموذج بواسطة نموذج سجل محطة ضخ الإلكتروني - نسخة 2025
-            </p>
+        <div style="text-align: center; margin-top: 25px; color: #666; font-size: 14px; padding: 10px; border-top: 1px solid #eee;">
+            <p>تم إنشاء هذا النموذج بواسطة نموذج سجل محطة ضخ الإلكتروني - نسخة 2025</p>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-       // نظام حفظ البيانات تلقائياً (بدون إشعارات)
-const STORAGE_KEY = 'pump_station_data_v3';
-
-// دالة لحفظ جميع البيانات (صامتة)
-function saveAllData() {
-    const data = {
-        stationName: document.getElementById('station-name').value,
-        operatorName: document.getElementById('operator-name').value,
-        recordDate: document.getElementById('record-date').value,
-        shift: document.getElementById('shift').value,
-        
-        tableData: {},
-        
-        waterPath: document.getElementById('waterPath').value,
-        tank1Level: document.getElementById('tank1Level').value,
-        tank2Level: document.getElementById('tank2Level').value,
-        tank3Level: document.getElementById('tank3Level').value,
-        compressor1: document.getElementById('compressor1').value,
-        compressor2: document.getElementById('compressor2').value,
-        com: document.getElementById('com').value,
-        startTime: document.getElementById('startTime').value,
-        endTime: document.getElementById('endTime').value,
-        totalHours: document.getElementById('totalHours').value,
-        dailyNotes: document.getElementById('dailyNotes').value,
-        
-        lastSaved: new Date().toISOString(),
-        version: 'v3'
-    };
-    
-    // جمع بيانات الجدول
-    document.querySelectorAll('.data-input').forEach(input => {
-        const value = input.value.trim();
-        if (value !== '') {
-            data.tableData[input.id] = value;
-        }
-    });
-    
-    // حفظ في localStorage (بدون إشعارات)
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        updateLastSaveTime(); // تحديث وقت الحفظ الأخير فقط
-    } catch (error) {
-        console.log('تم الحفظ تلقائياً');
-    }
-}
-
-// تحديث وقت الحفظ الأخير (دون إظهار)
-function updateLastSaveTime() {
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-    
-    // تحديث تلميح صغير فقط في console للمطورين
-    if (console && typeof console.log === 'function') {
-        console.log(`تم الحفظ تلقائياً: ${timeStr}`);
-    }
-}
-
-// دالة لتحميل البيانات المحفوظة (صامتة)
-function loadSavedData() {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (!savedData) return false;
-    
-    try {
-        const data = JSON.parse(savedData);
-        
-        // تحميل بيانات الرأس
-        document.getElementById('station-name').value = data.stationName || '';
-        document.getElementById('operator-name').value = data.operatorName || '';
-        document.getElementById('record-date').value = data.recordDate || '';
-        document.getElementById('shift').value = data.shift || 'صباحية';
-        
-        // تحميل بيانات الجدول
-        if (data.tableData) {
-            for (const [inputId, value] of Object.entries(data.tableData)) {
-                const input = document.getElementById(inputId);
-                if (input) input.value = value;
-            }
-        }
-        
-        // تحميل البيانات الإضافية
-        document.getElementById('waterPath').value = data.waterPath || '';
-        document.getElementById('tank1Level').value = data.tank1Level || '';
-        document.getElementById('tank2Level').value = data.tank2Level || '';
-        document.getElementById('tank3Level').value = data.tank3Level || '';
-        document.getElementById('compressor1').value = data.compressor1 || '';
-        document.getElementById('compressor2').value = data.compressor2 || '';
-        document.getElementById('com').value = data.com || '';
-        document.getElementById('startTime').value = data.startTime || '06:00';
-        document.getElementById('endTime').value = data.endTime || '24:00';
-        document.getElementById('totalHours').value = data.totalHours || '';
-        document.getElementById('dailyNotes').value = data.dailyNotes || '';
-        
-        // حساب الساعات تلقائياً بعد التحميل
-        setTimeout(calculateTotalHours, 100);
-        
-        return true;
-    } catch (error) {
-        return false;
-    }
-}
-
-// مراقبة تغييرات الحقول وحفظها تلقائياً (بدون إشعارات)
-function setupAutoSave() {
-    // استخدام Debounce لتقليل مرات الحفظ
-    let saveTimeout;
-    function debouncedSave() {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(saveAllData, 1000); // تأخير ثانية واحدة
-    }
-    
-    // مراقبة جميع حقول الإدخال
-    const inputs = document.querySelectorAll('input, select, textarea');
-    inputs.forEach(input => {
-        input.addEventListener('input', debouncedSave);
-        input.addEventListener('change', debouncedSave);
-        input.addEventListener('blur', debouncedSave);
-    });
-    
-    // مراقبة الأزرار (باستثناء أزرار الطباعة والتصدير)
-    const buttons = document.querySelectorAll('.btn');
-    buttons.forEach(btn => {
-        if (!btn.id.includes('print') && !btn.id.includes('export')) {
-            btn.addEventListener('click', debouncedSave);
-        }
-    });
-    
-    // حفظ تلقائي كل دقيقة (كإحتياطي صامت)
-    setInterval(saveAllData, 60000);
-    
-    // حفظ عند مغادرة الصفحة
-    window.addEventListener('beforeunload', saveAllData);
-    window.addEventListener('pagehide', saveAllData);
-    
-    // حفظ عند تغيير التبويب
-    document.addEventListener('visibilitychange', function() {
-        if (document.hidden) saveAllData();
-    });
-}
-
-// تعديل دالة إعادة التعيين لحفظ نسخة احتياطية
-document.getElementById("resetBtn").addEventListener("click", function(e) {
-    if (confirm("هل تريد إعادة تعيين جميع البيانات؟")) {
-        // حفظ نسخة احتياطية قبل المسح
-        const backupData = localStorage.getItem(STORAGE_KEY);
-        if (backupData) {
-            const backupKey = 'pump_backup_' + new Date().getTime();
-            localStorage.setItem(backupKey, backupData);
-        }
-        
-        // تنفيذ الإعادة الأصلية
-        document.getElementById("station-name").value = "محطة الضخ الرئيسية";
-        document.getElementById("operator-name").value = "";
-        document.getElementById("record-date").valueAsDate = new Date();
-        document.getElementById("shift").value = "صباحية";
-
-        document.getElementById("waterPath").value = "";
-        document.getElementById("tank1Level").value = "";
-        document.getElementById("tank2Level").value = "";
-        document.getElementById("tank3Level").value = "";
-        document.getElementById("compressor1").value = "";
-        document.getElementById("compressor2").value = "";
-        document.getElementById("com").value = "";
-        document.getElementById("startTime").value = "06:00";
-        document.getElementById("endTime").value = "24:00";
-        document.getElementById("totalHours").value = "";
-        document.getElementById("dailyNotes").value = "";
-
-        document.querySelectorAll('.data-input').forEach(input => {
-            input.value = "";
-        });
-
-        while (pumpUnits.length > 3) {
-            pumpUnits.pop();
-        }
-
-        generateTable();
-        calculateTotalHours();
-        
-        // حفظ الحالة الجديدة
-        setTimeout(saveAllData, 1000);
-    }
-});
-
-// إضافة زر لاستعادة النسخة الاحتياطية (اختياري)
-function addRestoreBackupButton() {
-    const controls = document.querySelector('.controls');
-    if (!controls) return;
-    
-    // البحث عن نسخ احتياطية
-    const backups = [];
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.startsWith('pump_backup_')) {
-            backups.push(key);
-        }
-    }
-    
-    if (backups.length > 0) {
-        const restoreBtn = document.createElement('button');
-        restoreBtn.className = 'btn btn-secondary';
-        restoreBtn.innerHTML = '<i class="fas fa-history"></i> استعادة نسخة سابقة';
-        restoreBtn.style.background = '#FF9800';
-        restoreBtn.style.marginTop = '10px';
-        
-        restoreBtn.addEventListener('click', function() {
-            if (backups.length === 1) {
-                // إذا كان هناك نسخة واحدة فقط
-                if (confirm('هل تريد استعادة النسخة الاحتياطية السابقة؟')) {
-                    const backupData = localStorage.getItem(backups[0]);
-                    try {
-                        const data = JSON.parse(backupData);
-                        localStorage.setItem(STORAGE_KEY, backupData);
-                        location.reload(); // إعادة تحميل الصفحة لتحميل البيانات
-                    } catch (error) {
-                        alert('خطأ في استعادة النسخة الاحتياطية');
-                    }
-                }
-            } else {
-                // إذا كان هناك أكثر من نسخة
-                const backupList = backups.map(key => {
-                    const time = parseInt(key.split('_')[2]);
-                    return new Date(time).toLocaleString('ar-EG');
-                }).join('\n');
-                
-                if (confirm(`يوجد ${backups.length} نسخ احتياطية:\n${backupList}\n\nهل تريد استعادة أحدث نسخة؟`)) {
-                    const latestBackup = backups.sort().pop(); // أحدث نسخة
-                    const backupData = localStorage.getItem(latestBackup);
-                    localStorage.setItem(STORAGE_KEY, backupData);
-                    location.reload();
-                }
-            }
-        });
-        
-        // إضافة الزر في مجموعة الأزرار الثانية
-        const btnGroups = controls.querySelectorAll('.btn-group');
-        if (btnGroups.length > 1) {
-            btnGroups[1].appendChild(restoreBtn);
-        }
-    }
-}
-
-// إضافة زر لحذف جميع البيانات المحفوظة
-function addClearAllDataButton() {
-    const controls = document.querySelector('.controls');
-    if (!controls) return;
-    
-    const clearBtn = document.createElement('button');
-    clearBtn.className = 'btn btn-secondary';
-    clearBtn.innerHTML = '<i class="fas fa-trash"></i> حذف كل البيانات المحفوظة';
-    clearBtn.style.background = '#f44336';
-    clearBtn.style.marginTop = '10px';
-    
-    clearBtn.addEventListener('click', function() {
-        if (confirm('⚠️ تحذير: هذا سيحذف جميع البيانات المحفوظة على هذا المتصفح.\nهل أنت متأكد؟')) {
-            // حذف جميع بيانات المشروع
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.includes('pump_') || key.includes('pump_station')) {
-                    localStorage.removeItem(key);
-                }
-            }
+        // ============================================
+        // ⚠️ ⚠️ ⚠️ الخطوة الأولى: عدل هذه المعلومات ⚠️ ⚠️ ⚠️
+        // ============================================
+        const GITHUB_INFO = {
+            // 1. اسمك على GitHub (مثلاً: ahmed123)
+            username: "abdallah",
             
-            // إعادة تعيين النموذج
-            document.getElementById("resetBtn").click();
+            // 2. اسم المشروع على GitHub (مثلاً: pump-station)
+            repo: "pump-station",
             
-            // رسالة تأكيد بسيطة
-            setTimeout(() => {
-                alert('تم حذف جميع البيانات المحفوظة');
-            }, 500);
-        }
-    });
-    
-    // إضافة الزر في مجموعة الأزرار الثانية
-    const btnGroups = controls.querySelectorAll('.btn-group');
-    if (btnGroups.length > 1) {
-        btnGroups[1].appendChild(clearBtn);
-    }
-}
+            // 3. الـ Token الذي نسخته من GitHub
+            token: "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",
+            
+            // 4. اسم ملف البيانات (اتركه كما هو)
+            file: "station-data.json"
+        };
+        // ============================================
 
-// عند تحميل الصفحة
-document.addEventListener("DOMContentLoaded", function() {
-    // تحميل البيانات المحفوظة تلقائياً (بدون إشعارات)
-    setTimeout(() => {
-        loadSavedData();
-        
-        // إعداد الحفظ التلقائي
-        setupAutoSave();
-        
-        // إضافة أزرار التحكم (اختياري)
-        addRestoreBackupButton();
-        addClearAllDataButton();
-        
-    }, 100);
-});
-
-// تعديل دالة التصدير لـ Excel لتحميل آخر البيانات المحفوظة
-const originalExportToExcel = exportToExcel;
-exportToExcel = function() {
-    // التأكد من حفظ البيانات الحالية قبل التصدير
-    saveAllData();
-    
-    // تنفيذ التصدير الأصلي
-    return originalExportToExcel();
-};
-
-// استبدال event listener للتصدير
-document.getElementById("exportBtn").replaceEventListener = null;
-document.getElementById("exportBtn").addEventListener('click', exportToExcel);
-        // تعيين التاريخ الحالي افتراضياً
-        document.getElementById("record-date").valueAsDate = new Date();
-
-        // بيانات الوحدات (طلمبات) الافتراضية - تم تعديلها
+        // بيانات الوحدات الأصلية (اتركها كما هي)
         const pumpUnits = [{
             name: "معلومات",
             items: [{
@@ -1228,7 +852,7 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
                 name: "حالة حرارة كرسي التحميل",
                 id: "bearing1",
                 unit: "°C",
-                inputType: "mixed", // نص و أرقام
+                inputType: "mixed",
                 placeholder: "أدخل الحرارة أو الحالة"
             }, {
                 name: "حالة الحشو",
@@ -1239,9 +863,9 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
             }, {
                 name: "درجة حرارة الموتور",
                 id: "motorTemp1",
-                unit: "", // تم إزالة °C لجعله نصياً
-                inputType: "mixed", // نص و أرقام معاً
-                placeholder: "أدخل درجة الحرارة أو الحالة (مثال: 60°C أو طبيعي)"
+                unit: "",
+                inputType: "mixed",
+                placeholder: "أدخل درجة الحرارة أو الحالة"
             }, {
                 name: "شدة تيار الموتور",
                 id: "motorCurrent1",
@@ -1281,7 +905,7 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
                 name: "حالة حرارة كرسي التحميل",
                 id: "bearing2",
                 unit: "°C",
-                inputType: "mixed", // نص و أرقام
+                inputType: "mixed",
                 placeholder: "أدخل الحرارة أو الحالة"
             }, {
                 name: "حالة الحشو",
@@ -1292,9 +916,9 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
             }, {
                 name: "درجة حرارة الموتور",
                 id: "motorTemp2",
-                unit: "", // تم إزالة °C
-                inputType: "mixed", // نص و أرقام معاً
-                placeholder: "أدخل درجة الحرارة أو الحالة (مثال: 65°C أو طبيعي)"
+                unit: "",
+                inputType: "mixed",
+                placeholder: "أدخل درجة الحرارة أو الحالة"
             }, {
                 name: "شدة تيار الموتور",
                 id: "motorCurrent2",
@@ -1307,19 +931,22 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
         // أوقات القراءة
         const timeSlots = ["6:00", "11:00", "16:00", "21:00", "2:00"];
 
+        // ============================================
+        // النظام الأساسي (الحفظ المحلي)
+        // ============================================
+        
+        // تعيين التاريخ الحالي
+        document.getElementById("record-date").valueAsDate = new Date();
+
         // إنشاء الجدول
         const tableBody = document.getElementById("tableBody");
 
         function generateTable() {
             tableBody.innerHTML = "";
-
-            const sortedUnits = [...pumpUnits];
-            sortedUnits.sort((a, b) => {
+            const sortedUnits = [...pumpUnits].sort((a, b) => {
                 if (a.name === "معلومات") return -1;
                 if (b.name === "معلومات") return 1;
-                if (a.unitNumber && b.unitNumber) {
-                    return a.unitNumber - b.unitNumber;
-                }
+                if (a.unitNumber && b.unitNumber) return a.unitNumber - b.unitNumber;
                 return 0;
             });
 
@@ -1334,7 +961,6 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
 
                 unit.items.forEach((item) => {
                     const row = document.createElement("tr");
-
                     const nameCell = document.createElement("td");
                     nameCell.textContent = item.name;
                     row.appendChild(nameCell);
@@ -1342,20 +968,16 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
                     timeSlots.forEach((time, timeIndex) => {
                         const inputCell = document.createElement("td");
                         const input = document.createElement("input");
-
-                        // تحديد نوع الإدخال
+                        
                         if (item.inputType === "number") {
                             input.type = "text";
                             input.inputMode = "decimal";
                             input.className = "data-input keyboard-number number-input";
-                            input.pattern = "[0-9]*";
                         } else if (item.inputType === "mixed") {
-                            // حقل مختلط يسمح بالنصوص والأرقام
                             input.type = "text";
                             input.inputMode = "text";
                             input.className = "data-input keyboard-mixed mixed-input";
                         } else {
-                            // حقل نصي عادي
                             input.type = "text";
                             input.inputMode = "text";
                             input.className = "data-input keyboard-text text-input";
@@ -1364,14 +986,7 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
                         input.placeholder = item.placeholder || (item.unit ? `أدخل ${item.unit}` : "أدخل القيمة");
                         input.id = `${item.id}_${timeIndex}`;
                         input.setAttribute("data-unit", item.unit || "");
-                        input.setAttribute("data-item-name", item.name);
-                        input.setAttribute("data-time-slot", time);
                         input.setAttribute("autocomplete", "off");
-
-                        // السماح بكل أنواع الإدخال للحقول المختلطة
-                        if (item.inputType === "mixed") {
-                            input.setAttribute("data-mixed", "true");
-                        }
 
                         inputCell.appendChild(input);
                         row.appendChild(inputCell);
@@ -1382,7 +997,369 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
             });
         }
 
-        document.addEventListener("DOMContentLoaded", generateTable);
+        // الحفظ المحلي
+        const STORAGE_KEY = 'pump_local_data';
+
+        function saveLocalData() {
+            const data = getFormData();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function loadLocalData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) return false;
+            
+            try {
+                const data = JSON.parse(saved);
+                loadDataIntoForm(data);
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        function getFormData() {
+            const data = {
+                stationName: document.getElementById('station-name').value,
+                operatorName: document.getElementById('operator-name').value,
+                recordDate: document.getElementById('record-date').value,
+                shift: document.getElementById('shift').value,
+                
+                tableData: {},
+                
+                waterPath: document.getElementById('waterPath').value,
+                tank1Level: document.getElementById('tank1Level').value,
+                tank2Level: document.getElementById('tank2Level').value,
+                tank3Level: document.getElementById('tank3Level').value,
+                compressor1: document.getElementById('compressor1').value,
+                compressor2: document.getElementById('compressor2').value,
+                com: document.getElementById('com').value,
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                totalHours: document.getElementById('totalHours').value,
+                dailyNotes: document.getElementById('dailyNotes').value,
+                
+                savedAt: new Date().toISOString()
+            };
+            
+            document.querySelectorAll('.data-input').forEach(input => {
+                const value = input.value.trim();
+                if (value !== '') {
+                    data.tableData[input.id] = value;
+                }
+            });
+            
+            return data;
+        }
+
+        function loadDataIntoForm(data) {
+            if (!data) return;
+            
+            document.getElementById('station-name').value = data.stationName || '';
+            document.getElementById('operator-name').value = data.operatorName || '';
+            document.getElementById('record-date').value = data.recordDate || '';
+            document.getElementById('shift').value = data.shift || 'صباحية';
+            
+            if (data.tableData) {
+                for (const [inputId, value] of Object.entries(data.tableData)) {
+                    const input = document.getElementById(inputId);
+                    if (input) input.value = value;
+                }
+            }
+            
+            const fields = [
+                'waterPath', 'tank1Level', 'tank2Level', 'tank3Level',
+                'compressor1', 'compressor2', 'com',
+                'startTime', 'endTime', 'totalHours', 'dailyNotes'
+            ];
+            
+            fields.forEach(field => {
+                if (data[field]) {
+                    const element = document.getElementById(field);
+                    if (element) element.value = data[field];
+                }
+            });
+            
+            setTimeout(calculateTotalHours, 100);
+        }
+
+        // ============================================
+        // النظام الجديد: المشاركة بين الهواتف
+        // ============================================
+
+        // نظام GitHub للمشاركة
+        class SharedDataSystem {
+            constructor() {
+                this.baseURL = `https://api.github.com/repos/${GITHUB_INFO.username}/${GITHUB_INFO.repo}/contents`;
+                this.isConfigured = this.checkConfig();
+            }
+            
+            checkConfig() {
+                if (GITHUB_INFO.username.includes('ضع-اسمك') || 
+                    GITHUB_INFO.repo.includes('ضع-اسم') || 
+                    GITHUB_INFO.token.includes('ضع-الرمز')) {
+                    return false;
+                }
+                return true;
+            }
+            
+            // جلب جميع البيانات من GitHub
+            async getAllData() {
+                if (!this.isConfigured) {
+                    console.log("⚠️ النظام غير مهيء - يرجى إدخال معلومات GitHub");
+                    return { stations: {} };
+                }
+                
+                try {
+                    const response = await fetch(`${this.baseURL}/${GITHUB_INFO.file}`, {
+                        headers: {
+                            'Authorization': `token ${GITHUB_INFO.token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        // إذا الملف مش موجود، ننشئ بيانات جديدة
+                        if (response.status === 404) {
+                            return { stations: {}, lastUpdated: new Date().toISOString() };
+                        }
+                        throw new Error('فشل في جلب البيانات');
+                    }
+                    
+                    const fileData = await response.json();
+                    const content = atob(fileData.content); // فك التشفير
+                    return JSON.parse(content);
+                    
+                } catch (error) {
+                    console.log("❌ خطأ في الاتصال:", error.message);
+                    return { stations: {} };
+                }
+            }
+            
+            // حفظ البيانات على GitHub
+            async saveAllData(data) {
+                if (!this.isConfigured) return false;
+                
+                try {
+                    // جلب الملف الحالي
+                    let sha = '';
+                    try {
+                        const currentFile = await fetch(`${this.baseURL}/${GITHUB_INFO.file}`, {
+                            headers: {
+                                'Authorization': `token ${GITHUB_INFO.token}`,
+                                'Accept': 'application/vnd.github.v3+json'
+                            }
+                        });
+                        
+                        if (currentFile.ok) {
+                            const fileData = await currentFile.json();
+                            sha = fileData.sha;
+                        }
+                    } catch (e) {
+                        // الملف مش موجود، عادي
+                    }
+                    
+                    // تحديث البيانات
+                    const updatedData = {
+                        ...data,
+                        lastUpdated: new Date().toISOString()
+                    };
+                    
+                    // تحويل إلى نص مشفر
+                    const content = btoa(JSON.stringify(updatedData, null, 2));
+                    
+                    // رفع الملف
+                    const response = await fetch(`${this.baseURL}/${GITHUB_INFO.file}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${GITHUB_INFO.token}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: `تحديث بيانات المحطات - ${new Date().toLocaleString('ar-EG')}`,
+                            content: content,
+                            sha: sha || undefined
+                        })
+                    });
+                    
+                    return response.ok;
+                    
+                } catch (error) {
+                    console.log("❌ خطأ في حفظ البيانات:", error.message);
+                    return false;
+                }
+            }
+            
+            // جلب بيانات محطة معينة
+            async getStationData(stationName) {
+                const allData = await this.getAllData();
+                return allData.stations?.[stationName] || null;
+            }
+            
+            // حفظ بيانات محطة
+            async saveStationData(stationName, stationData) {
+                const allData = await this.getAllData();
+                
+                // تأكد من وجود مصفوفة المحطات
+                if (!allData.stations) {
+                    allData.stations = {};
+                }
+                
+                // إضافة/تحديث البيانات
+                allData.stations[stationName] = {
+                    data: stationData,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: document.getElementById('operator-name').value || 'غير معروف',
+                    shift: document.getElementById('shift').value || 'غير محدد'
+                };
+                
+                return await this.saveAllData(allData);
+            }
+        }
+
+        // إنشاء نظام المشاركة
+        const sharedSystem = new SharedDataSystem();
+
+        // ============================================
+        // الربط بين الأنظمة
+        // ============================================
+
+        // عند كتابة اسم المحطة
+        document.getElementById('station-name').addEventListener('blur', async function() {
+            const stationName = this.value.trim();
+            
+            if (stationName && stationName.length > 2) {
+                // تغيير لون الحقل للإشارة للبحث
+                const originalColor = this.style.backgroundColor;
+                this.style.backgroundColor = '#e8f5e9';
+                
+                // البحث عن البيانات المشتركة
+                const stationData = await sharedSystem.getStationData(stationName);
+                
+                if (stationData && stationData.data) {
+                    // سؤال المستخدم إذا يريد تحميل البيانات
+                    setTimeout(() => {
+                        const lastUpdate = stationData.updatedAt ? 
+                            new Date(stationData.updatedAt).toLocaleString('ar-EG') : 
+                            'غير معروف';
+                        
+                        if (confirm(`✅ تم العثور على بيانات سابقة للمحطة "${stationName}"\nآخر تحديث: ${lastUpdate}\n\nهل تريد تحميل هذه البيانات؟`)) {
+                            loadDataIntoForm(stationData.data);
+                            saveLocalData(); // حفظ محلي بعد التحميل
+                        }
+                        this.style.backgroundColor = originalColor;
+                    }, 500);
+                } else {
+                    setTimeout(() => {
+                        this.style.backgroundColor = originalColor;
+                    }, 300);
+                }
+            }
+        });
+
+        // زر حفظ البيانات للجميع
+        document.getElementById('sharedDataBtn').addEventListener('click', async function() {
+            const stationName = document.getElementById('station-name').value.trim();
+            
+            if (!stationName) {
+                alert('⚠️ يرجى إدخال اسم المحطة أولاً');
+                return;
+            }
+            
+            if (!sharedSystem.isConfigured) {
+                alert('⚠️ يرجى إدخال معلومات GitHub في بداية الكود');
+                return;
+            }
+            
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            
+            try {
+                // 1. حفظ محلي
+                const formData = getFormData();
+                saveLocalData();
+                
+                // 2. حفظ مشترك
+                const success = await sharedSystem.saveStationData(stationName, formData);
+                
+                if (success) {
+                    alert(`✅ تم حفظ بيانات المحطة "${stationName}" للجميع\nيمكن للورديات الأخرى رؤيتها`);
+                } else {
+                    alert('❌ فشل في حفظ البيانات المشتركة');
+                }
+            } catch (error) {
+                alert('❌ حدث خطأ أثناء الحفظ');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+
+        // زر عرض المحطات المسجلة
+        document.getElementById('stationsListBtn').addEventListener('click', async function() {
+            if (!sharedSystem.isConfigured) {
+                alert('⚠️ يرجى إدخال معلومات GitHub في بداية الكود');
+                return;
+            }
+            
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل...';
+            
+            try {
+                const allData = await sharedSystem.getAllData();
+                const stations = allData.stations || {};
+                
+                if (Object.keys(stations).length === 0) {
+                    alert('📭 لا توجد محطات مسجلة بعد');
+                } else {
+                    let stationsList = '📋 المحطات المسجلة:\n\n';
+                    Object.keys(stations).forEach((name, index) => {
+                        const station = stations[name];
+                        const date = station.updatedAt ? 
+                            new Date(station.updatedAt).toLocaleDateString('ar-EG') : 
+                            'غير معروف';
+                        const by = station.updatedBy ? ` - ${station.updatedBy}` : '';
+                        stationsList += `${index + 1}. ${name} (${date})${by}\n`;
+                    });
+                    
+                    const selected = prompt(`${stationsList}\n\nأدخل اسم المحطة التي تريد تحميلها:`);
+                    if (selected && stations[selected]) {
+                        if (confirm(`هل تريد تحميل بيانات المحطة "${selected}"؟`)) {
+                            document.getElementById('station-name').value = selected;
+                            loadDataIntoForm(stations[selected].data);
+                            saveLocalData();
+                        }
+                    }
+                }
+            } catch (error) {
+                alert('❌ خطأ في تحميل قائمة المحطات');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+
+        // ============================================
+        // باقي الدوال الأصلية
+        // ============================================
+
+        // توليد الجدول عند التحميل
+        document.addEventListener("DOMContentLoaded", function() {
+            generateTable();
+            
+            // تحميل البيانات المحلية
+            setTimeout(() => {
+                loadLocalData();
+            }, 300);
+            
+            // إعداد الحفظ التلقائي
+            setupAutoSave();
+        });
 
         // إضافة وحدة جديدة
         document.getElementById("addRowBtn").addEventListener("click", function() {
@@ -1394,14 +1371,13 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
             });
 
             const nextUnitNumber = maxUnitNumber + 1;
-
             if (nextUnitNumber > 9) {
                 alert("الحد الأقصى للوحدات هو 9 وحدات");
                 return;
             }
 
             const newUnit = {
-                name: `الوحدة رقم ${unitCountToArabic(nextUnitNumber)}`,
+                name: `الوحدة رقم ${nextUnitNumber}`,
                 type: "unit",
                 unitNumber: nextUnitNumber,
                 items: [{
@@ -1444,7 +1420,7 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
                     name: "درجة حرارة الموتور",
                     id: `motorTemp${nextUnitNumber}`,
                     unit: "",
-                    inputType: "mixed", // نص و أرقام معاً
+                    inputType: "mixed",
                     placeholder: "أدخل درجة الحرارة أو الحالة"
                 }, {
                     name: "شدة تيار الموتور",
@@ -1457,32 +1433,15 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
 
             pumpUnits.push(newUnit);
             generateTable();
-
-            setTimeout(() => {
-                const unitHeaders = document.querySelectorAll('.unit-header');
-                if (unitHeaders.length > 0) {
-                    const newUnitHeader = unitHeaders[unitHeaders.length - 1];
-                    newUnitHeader.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
-                }
-            }, 100);
+            
+            // حفظ بعد الإضافة
+            setTimeout(saveLocalData, 100);
         });
-
-        // تحويل الأرقام إلى العربية
-        function unitCountToArabic(num) {
-            const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
-            if (num < 10) {
-                return arabicNumbers[num];
-            }
-            return num.toString();
-        }
 
         // إعادة تعيين النموذج
         document.getElementById("resetBtn").addEventListener("click", function() {
             if (confirm("هل تريد إعادة تعيين جميع البيانات؟")) {
-                document.getElementById("station-name").value = "محطة الضخ الرئيسية";
+                document.getElementById("station-name").value = "";
                 document.getElementById("operator-name").value = "";
                 document.getElementById("record-date").valueAsDate = new Date();
                 document.getElementById("shift").value = "صباحية";
@@ -1509,7 +1468,7 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
 
                 generateTable();
                 calculateTotalHours();
-                alert("تم إعادة تعيين النموذج بنجاح");
+                saveLocalData();
             }
         });
 
@@ -1519,9 +1478,14 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
         });
 
         // تصدير إلى Excel
-        document.getElementById("exportBtn").addEventListener("click", exportToExcel);
+        document.getElementById("exportBtn").addEventListener("click", function() {
+            exportToExcel();
+        });
 
         function exportToExcel() {
+            // أولاً نحفظ البيانات
+            saveLocalData();
+            
             const wsData = [];
             wsData.push(["سجل محطة ضخ - بيانات المحطة"]);
             wsData.push([]);
@@ -1549,7 +1513,6 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
                         const unit = input ? input.getAttribute("data-unit") : "";
 
                         if (value) {
-                            // إضافة الوحدة فقط إذا كانت موجودة والقيمة موجودة
                             if (unit && unit.trim() !== "") {
                                 rowData.push(`${value} ${unit}`);
                             } else {
@@ -1590,19 +1553,10 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-            const wscols = [{
-                wch: 30
-            }, {
-                wch: 20
-            }, {
-                wch: 20
-            }, {
-                wch: 20
-            }, {
-                wch: 20
-            }, {
-                wch: 20
-            }];
+            const wscols = [
+                { wch: 30 }, { wch: 20 }, { wch: 20 },
+                { wch: 20 }, { wch: 20 }, { wch: 20 }
+            ];
             ws["!cols"] = wscols;
 
             XLSX.utils.book_append_sheet(wb, ws, "سجل محطة الضخ");
@@ -1615,7 +1569,7 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
             alert("تم تصدير البيانات إلى ملف Excel بنجاح");
         }
 
-        // حساب عدد ساعات التشغيل تلقائياً
+        // حساب عدد ساعات التشغيل
         document.getElementById("startTime").addEventListener("change", calculateTotalHours);
         document.getElementById("endTime").addEventListener("change", calculateTotalHours);
 
@@ -1633,16 +1587,39 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
 
                 const diffMs = end - start;
                 const diffHours = diffMs / (1000 * 60 * 60);
-
                 document.getElementById("totalHours").value = diffHours.toFixed(2);
             }
         }
 
         calculateTotalHours();
 
-        document.addEventListener('touchstart', function() {}, {
-            passive: true
-        });
+        // إعداد الحفظ التلقائي
+        function setupAutoSave() {
+            let saveTimer;
+            
+            function scheduleSave() {
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(() => {
+                    saveLocalData();
+                }, 2000);
+            }
+            
+            // مراقبة جميع الحقول
+            const allInputs = document.querySelectorAll('input, textarea, select');
+            allInputs.forEach(input => {
+                input.addEventListener('input', scheduleSave);
+                input.addEventListener('change', scheduleSave);
+            });
+            
+            // حفظ كل دقيقة
+            setInterval(saveLocalData, 60000);
+            
+            // حفظ عند مغادرة الصفحة
+            window.addEventListener('beforeunload', saveLocalData);
+        }
+
+        // تحسينات للهواتف
+        document.addEventListener('touchstart', function() {}, { passive: true });
 
         document.addEventListener('focusin', function(event) {
             if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
@@ -1663,29 +1640,6 @@ document.getElementById("exportBtn").addEventListener('click', exportToExcel);
             }
             lastTouchEnd = now;
         }, false);
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const inputs = document.querySelectorAll('input[placeholder], textarea[placeholder]');
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    this.style.backgroundColor = '#ffffe0';
-                });
-
-                input.addEventListener('blur', function() {
-                    this.style.backgroundColor = '';
-                });
-            });
-
-            setTimeout(() => {
-                if (window.innerWidth <= 768) {
-                    alert("مرحباً! يمكنك إدخال البيانات بالكتابة العادية أو الأرقام حسب نوع الحقل. الحقول الرقمية تفتح لوحة أرقام تلقائياً.");
-                }
-            }, 1000);
-        });
     </script>
 </body>
-
-
 </html>
-
-
