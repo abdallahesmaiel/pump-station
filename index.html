@@ -751,318 +751,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        // نظام حفظ البيانات تلقائياً (بدون إشعارات)
-        const STORAGE_KEY = 'pump_station_data_v3';
-
-        // دالة لحفظ جميع البيانات (صامتة)
-        function saveAllData() {
-            const data = {
-                stationName: document.getElementById('station-name').value,
-                operatorName: document.getElementById('operator-name').value,
-                recordDate: document.getElementById('record-date').value,
-                shift: document.getElementById('shift').value,
-
-                tableData: {},
-
-                waterPath: document.getElementById('waterPath').value,
-                tank1Level: document.getElementById('tank1Level').value,
-                tank2Level: document.getElementById('tank2Level').value,
-                tank3Level: document.getElementById('tank3Level').value,
-                compressor1: document.getElementById('compressor1').value,
-                compressor2: document.getElementById('compressor2').value,
-                com: document.getElementById('com').value,
-                startTime: document.getElementById('startTime').value,
-                endTime: document.getElementById('endTime').value,
-                totalHours: document.getElementById('totalHours').value,
-                dailyNotes: document.getElementById('dailyNotes').value,
-
-                lastSaved: new Date().toISOString(),
-                version: 'v3'
-            };
-
-            // جمع بيانات الجدول
-            document.querySelectorAll('.data-input').forEach(input => {
-                const value = input.value.trim();
-                if (value !== '') {
-                    data.tableData[input.id] = value;
-                }
-            });
-
-            // حفظ في localStorage (بدون إشعارات)
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-                updateLastSaveTime(); // تحديث وقت الحفظ الأخير فقط
-            } catch (error) {
-                console.log('تم الحفظ تلقائياً');
-            }
-        }
-
-        // تحديث وقت الحفظ الأخير (دون إظهار)
-        function updateLastSaveTime() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('ar-EG', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-
-            // تحديث تلميح صغير فقط في console للمطورين
-            if (console && typeof console.log === 'function') {
-                console.log(`تم الحفظ تلقائياً: ${timeStr}`);
-            }
-        }
-
-        // دالة لتحميل البيانات المحفوظة (صامتة)
-        function loadSavedData() {
-            const savedData = localStorage.getItem(STORAGE_KEY);
-            if (!savedData) return false;
-
-            try {
-                const data = JSON.parse(savedData);
-
-                // تحميل بيانات الرأس
-                document.getElementById('station-name').value = data.stationName || '';
-                document.getElementById('operator-name').value = data.operatorName || '';
-                document.getElementById('record-date').value = data.recordDate || '';
-                document.getElementById('shift').value = data.shift || 'صباحية';
-
-                // تحميل بيانات الجدول
-                if (data.tableData) {
-                    for (const [inputId, value] of Object.entries(data.tableData)) {
-                        const input = document.getElementById(inputId);
-                        if (input) input.value = value;
-                    }
-                }
-
-                // تحميل البيانات الإضافية
-                document.getElementById('waterPath').value = data.waterPath || '';
-                document.getElementById('tank1Level').value = data.tank1Level || '';
-                document.getElementById('tank2Level').value = data.tank2Level || '';
-                document.getElementById('tank3Level').value = data.tank3Level || '';
-                document.getElementById('compressor1').value = data.compressor1 || '';
-                document.getElementById('compressor2').value = data.compressor2 || '';
-                document.getElementById('com').value = data.com || '';
-                document.getElementById('startTime').value = data.startTime || '06:00';
-                document.getElementById('endTime').value = data.endTime || '24:00';
-                document.getElementById('totalHours').value = data.totalHours || '';
-                document.getElementById('dailyNotes').value = data.dailyNotes || '';
-
-                // حساب الساعات تلقائياً بعد التحميل
-                setTimeout(calculateTotalHours, 100);
-
-                return true;
-            } catch (error) {
-                return false;
-            }
-        }
-
-        // مراقبة تغييرات الحقول وحفظها تلقائياً (بدون إشعارات)
-        function setupAutoSave() {
-            // استخدام Debounce لتقليل مرات الحفظ
-            let saveTimeout;
-
-            function debouncedSave() {
-                clearTimeout(saveTimeout);
-                saveTimeout = setTimeout(saveAllData, 1000); // تأخير ثانية واحدة
-            }
-
-            // مراقبة جميع حقول الإدخال
-            const inputs = document.querySelectorAll('input, select, textarea');
-            inputs.forEach(input => {
-                input.addEventListener('input', debouncedSave);
-                input.addEventListener('change', debouncedSave);
-                input.addEventListener('blur', debouncedSave);
-            });
-
-            // مراقبة الأزرار (باستثناء أزرار الطباعة والتصدير)
-            const buttons = document.querySelectorAll('.btn');
-            buttons.forEach(btn => {
-                if (!btn.id.includes('print') && !btn.id.includes('export')) {
-                    btn.addEventListener('click', debouncedSave);
-                }
-            });
-
-            // حفظ تلقائي كل دقيقة (كإحتياطي صامت)
-            setInterval(saveAllData, 60000);
-
-            // حفظ عند مغادرة الصفحة
-            window.addEventListener('beforeunload', saveAllData);
-            window.addEventListener('pagehide', saveAllData);
-
-            // حفظ عند تغيير التبويب
-            document.addEventListener('visibilitychange', function() {
-                if (document.hidden) saveAllData();
-            });
-        }
-
-        // تعديل دالة إعادة التعيين لحفظ نسخة احتياطية
-        document.getElementById("resetBtn").addEventListener("click", function(e) {
-            if (confirm("هل تريد إعادة تعيين جميع البيانات؟")) {
-                // حفظ نسخة احتياطية قبل المسح
-                const backupData = localStorage.getItem(STORAGE_KEY);
-                if (backupData) {
-                    const backupKey = 'pump_backup_' + new Date().getTime();
-                    localStorage.setItem(backupKey, backupData);
-                }
-
-                // تنفيذ الإعادة الأصلية
-                document.getElementById("station-name").value = "محطة الضخ الرئيسية";
-                document.getElementById("operator-name").value = "";
-                document.getElementById("record-date").valueAsDate = new Date();
-                document.getElementById("shift").value = "صباحية";
-
-                document.getElementById("waterPath").value = "";
-                document.getElementById("tank1Level").value = "";
-                document.getElementById("tank2Level").value = "";
-                document.getElementById("tank3Level").value = "";
-                document.getElementById("compressor1").value = "";
-                document.getElementById("compressor2").value = "";
-                document.getElementById("com").value = "";
-                document.getElementById("startTime").value = "06:00";
-                document.getElementById("endTime").value = "24:00";
-                document.getElementById("totalHours").value = "";
-                document.getElementById("dailyNotes").value = "";
-
-                document.querySelectorAll('.data-input').forEach(input => {
-                    input.value = "";
-                });
-
-                while (pumpUnits.length > 3) {
-                    pumpUnits.pop();
-                }
-
-                generateTable();
-                calculateTotalHours();
-
-                // حفظ الحالة الجديدة
-                setTimeout(saveAllData, 1000);
-            }
-        });
-
-        // إضافة زر لاستعادة النسخة الاحتياطية (اختياري)
-        function addRestoreBackupButton() {
-            const controls = document.querySelector('.controls');
-            if (!controls) return;
-
-            // البحث عن نسخ احتياطية
-            const backups = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('pump_backup_')) {
-                    backups.push(key);
-                }
-            }
-
-            if (backups.length > 0) {
-                const restoreBtn = document.createElement('button');
-                restoreBtn.className = 'btn btn-secondary';
-                restoreBtn.innerHTML = '<i class="fas fa-history"></i> استعادة نسخة سابقة';
-                restoreBtn.style.background = '#FF9800';
-                restoreBtn.style.marginTop = '10px';
-
-                restoreBtn.addEventListener('click', function() {
-                    if (backups.length === 1) {
-                        // إذا كان هناك نسخة واحدة فقط
-                        if (confirm('هل تريد استعادة النسخة الاحتياطية السابقة؟')) {
-                            const backupData = localStorage.getItem(backups[0]);
-                            try {
-                                const data = JSON.parse(backupData);
-                                localStorage.setItem(STORAGE_KEY, backupData);
-                                location.reload(); // إعادة تحميل الصفحة لتحميل البيانات
-                            } catch (error) {
-                                alert('خطأ في استعادة النسخة الاحتياطية');
-                            }
-                        }
-                    } else {
-                        // إذا كان هناك أكثر من نسخة
-                        const backupList = backups.map(key => {
-                            const time = parseInt(key.split('_')[2]);
-                            return new Date(time).toLocaleString('ar-EG');
-                        }).join('\n');
-
-                        if (confirm(`يوجد ${backups.length} نسخ احتياطية:\n${backupList}\n\nهل تريد استعادة أحدث نسخة؟`)) {
-                            const latestBackup = backups.sort().pop(); // أحدث نسخة
-                            const backupData = localStorage.getItem(latestBackup);
-                            localStorage.setItem(STORAGE_KEY, backupData);
-                            location.reload();
-                        }
-                    }
-                });
-
-                // إضافة الزر في مجموعة الأزرار الثانية
-                const btnGroups = controls.querySelectorAll('.btn-group');
-                if (btnGroups.length > 1) {
-                    btnGroups[1].appendChild(restoreBtn);
-                }
-            }
-        }
-
-        // إضافة زر لحذف جميع البيانات المحفوظة
-        function addClearAllDataButton() {
-            const controls = document.querySelector('.controls');
-            if (!controls) return;
-
-            const clearBtn = document.createElement('button');
-            clearBtn.className = 'btn btn-secondary';
-            clearBtn.innerHTML = '<i class="fas fa-trash"></i> حذف كل البيانات المحفوظة';
-            clearBtn.style.background = '#f44336';
-            clearBtn.style.marginTop = '10px';
-
-            clearBtn.addEventListener('click', function() {
-                if (confirm('⚠️ تحذير: هذا سيحذف جميع البيانات المحفوظة على هذا المتصفح.\nهل أنت متأكد؟')) {
-                    // حذف جميع بيانات المشروع
-                    for (let i = 0; i < localStorage.length; i++) {
-                        const key = localStorage.key(i);
-                        if (key.includes('pump_') || key.includes('pump_station')) {
-                            localStorage.removeItem(key);
-                        }
-                    }
-
-                    // إعادة تعيين النموذج
-                    document.getElementById("resetBtn").click();
-
-                    // رسالة تأكيد بسيطة
-                    setTimeout(() => {
-                        alert('تم حذف جميع البيانات المحفوظة');
-                    }, 500);
-                }
-            });
-
-            // إضافة الزر في مجموعة الأزرار الثانية
-            const btnGroups = controls.querySelectorAll('.btn-group');
-            if (btnGroups.length > 1) {
-                btnGroups[1].appendChild(clearBtn);
-            }
-        }
-
-        // عند تحميل الصفحة
-        document.addEventListener("DOMContentLoaded", function() {
-            // تحميل البيانات المحفوظة تلقائياً (بدون إشعارات)
-            setTimeout(() => {
-                loadSavedData();
-
-                // إعداد الحفظ التلقائي
-                setupAutoSave();
-
-                // إضافة أزرار التحكم (اختياري)
-                addRestoreBackupButton();
-                addClearAllDataButton();
-
-            }, 100);
-        });
-
-        // تعديل دالة التصدير لـ Excel لتحميل آخر البيانات المحفوظة
-        const originalExportToExcel = exportToExcel;
-        exportToExcel = function() {
-            // التأكد من حفظ البيانات الحالية قبل التصدير
-            saveAllData();
-
-            // تنفيذ التصدير الأصلي
-            return originalExportToExcel();
-        };
-
-        // استبدال event listener للتصدير
-        document.getElementById("exportBtn").replaceEventListener = null;
-        document.getElementById("exportBtn").addEventListener('click', exportToExcel);
         // تعيين التاريخ الحالي افتراضياً
         document.getElementById("record-date").valueAsDate = new Date();
 
@@ -1073,7 +761,7 @@
                 name: "المنسوب",
                 id: "level1",
                 unit: "سم",
-                inputType: "mixed",
+                inputType: "number",
                 placeholder: "أدخل المنسوب بالسم"
             }, {
                 name: "قراءة عداد الطاقة",
@@ -1585,6 +1273,179 @@
                     alert("مرحباً! يمكنك إدخال البيانات بالكتابة العادية أو الأرقام حسب نوع الحقل. الحقول الرقمية تفتح لوحة أرقام تلقائياً.");
                 }
             }, 1000);
+        });
+        // نظام حفظ بيانات تلقائي صامت تماماً
+        const STORAGE_KEY = 'pump_data';
+
+        // حفظ البيانات (بدون أي إشعارات)
+        function silentSave() {
+            const data = {
+                station: document.getElementById('station-name').value,
+                operator: document.getElementById('operator-name').value,
+                date: document.getElementById('record-date').value,
+                shift: document.getElementById('shift').value,
+
+                // بيانات الجدول
+                inputs: {},
+
+                // بيانات إضافية
+                waterPath: document.getElementById('waterPath').value,
+                tank1: document.getElementById('tank1Level').value,
+                tank2: document.getElementById('tank2Level').value,
+                tank3: document.getElementById('tank3Level').value,
+                comp1: document.getElementById('compressor1').value,
+                comp2: document.getElementById('compressor2').value,
+                compressor: document.getElementById('com').value,
+                start: document.getElementById('startTime').value,
+                end: document.getElementById('endTime').value,
+                hours: document.getElementById('totalHours').value,
+                notes: document.getElementById('dailyNotes').value
+            };
+
+            // حفظ حقول الجدول
+            document.querySelectorAll('.data-input').forEach(input => {
+                if (input.value) {
+                    data.inputs[input.id] = input.value;
+                }
+            });
+
+            // الحفظ في الخلفية
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            } catch (e) {
+                // لا شيء - حفظ صامت
+            }
+        }
+
+        // تحميل البيانات (بدون إشعارات)
+        function silentLoad() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (!saved) return;
+
+                const data = JSON.parse(saved);
+
+                // تحميل البيانات الأساسية
+                document.getElementById('station-name').value = data.station || '';
+                document.getElementById('operator-name').value = data.operator || '';
+                document.getElementById('record-date').value = data.date || '';
+                document.getElementById('shift').value = data.shift || 'صباحية';
+
+                // تحميل بيانات الجدول
+                if (data.inputs) {
+                    Object.entries(data.inputs).forEach(([id, value]) => {
+                        const input = document.getElementById(id);
+                        if (input) input.value = value;
+                    });
+                }
+
+                // تحميل البيانات الإضافية
+                document.getElementById('waterPath').value = data.waterPath || '';
+                document.getElementById('tank1Level').value = data.tank1 || '';
+                document.getElementById('tank2Level').value = data.tank2 || '';
+                document.getElementById('tank3Level').value = data.tank3 || '';
+                document.getElementById('compressor1').value = data.comp1 || '';
+                document.getElementById('compressor2').value = data.comp2 || '';
+                document.getElementById('com').value = data.compressor || '';
+                document.getElementById('startTime').value = data.start || '06:00';
+                document.getElementById('endTime').value = data.end || '24:00';
+                document.getElementById('totalHours').value = data.hours || '';
+                document.getElementById('dailyNotes').value = data.notes || '';
+
+                // حساب الساعات
+                setTimeout(calculateTotalHours, 100);
+
+            } catch (e) {
+                // لا شيء - تحميل صامت
+            }
+        }
+
+        // إعداد الحفظ التلقائي
+        function setupSilentAutoSave() {
+            // تأخير الحفظ لتجنب التكرار
+            let saveTimer;
+
+            function scheduleSave() {
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(silentSave, 1500);
+            }
+
+            // مراقبة جميع الحقول
+            const allInputs = document.querySelectorAll('input, textarea, select');
+            allInputs.forEach(input => {
+                input.addEventListener('input', scheduleSave);
+                input.addEventListener('change', scheduleSave);
+            });
+
+            // حفظ عند أي ضغط زر
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('click', scheduleSave);
+            });
+
+            // حفظ كل دقيقتين
+            setInterval(silentSave, 120000);
+
+            // حفظ عند مغادرة الصفحة
+            window.addEventListener('beforeunload', silentSave);
+        }
+
+        // التحميل التلقائي عند بدء الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                silentLoad();
+                setupSilentAutoSave();
+            }, 300);
+        });
+
+        // تعديل زر الإعادة ليقوم بالحفظ أولاً
+        const originalResetFunction = function() {
+            document.getElementById("station-name").value = "محطة الضخ الرئيسية";
+            document.getElementById("operator-name").value = "";
+            document.getElementById("record-date").valueAsDate = new Date();
+            document.getElementById("shift").value = "صباحية";
+
+            document.getElementById("waterPath").value = "";
+            document.getElementById("tank1Level").value = "";
+            document.getElementById("tank2Level").value = "";
+            document.getElementById("tank3Level").value = "";
+            document.getElementById("compressor1").value = "";
+            document.getElementById("compressor2").value = "";
+            document.getElementById("com").value = "";
+            document.getElementById("startTime").value = "06:00";
+            document.getElementById("endTime").value = "24:00";
+            document.getElementById("totalHours").value = "";
+            document.getElementById("dailyNotes").value = "";
+
+            document.querySelectorAll('.data-input').forEach(input => {
+                input.value = "";
+            });
+
+            while (pumpUnits.length > 3) {
+                pumpUnits.pop();
+            }
+
+            generateTable();
+            calculateTotalHours();
+        };
+
+        document.getElementById("resetBtn").addEventListener("click", function() {
+            if (confirm("هل تريد إعادة تعيين جميع البيانات؟")) {
+                // حفظ نسخة احتياطية صامتة
+                try {
+                    const currentData = localStorage.getItem(STORAGE_KEY);
+                    if (currentData) {
+                        localStorage.setItem('last_backup', currentData);
+                    }
+                } catch (e) {
+                    // لا شيء
+                }
+
+                // تنفيذ الإعادة
+                originalResetFunction();
+
+                // حفظ الحالة الجديدة
+                setTimeout(silentSave, 1000);
+            }
         });
     </script>
 </body>
