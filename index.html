@@ -520,6 +520,77 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
+        // دالة لإنشاء الملف تلقائياً
+async function createDataFile() {
+    console.log("🔧 جاري إنشاء ملف البيانات...");
+    
+    // البيانات الأولية
+    const initialData = {
+        stations: {},
+        created: new Date().toISOString(),
+        version: "1.0",
+        description: "بيانات محطات الضخ - نظام مشترك"
+    };
+    
+    // تحويل إلى JSON
+    const jsonData = JSON.stringify(initialData, null, 2);
+    
+    // إنشاء ملف للتحميل
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    // إنشاء رابط للتحميل
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = 'pump-data.json';
+    downloadLink.textContent = '⬇️ انقر هنا لتحميل ملف البيانات';
+    downloadLink.style.cssText = `
+        display: block;
+        margin: 20px auto;
+        padding: 15px;
+        background: #4CAF50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        text-align: center;
+        max-width: 300px;
+        font-weight: bold;
+    `;
+    
+    // إضافة الرابط للصفحة
+    document.body.appendChild(downloadLink);
+    
+    // إرشادات
+    const instructions = document.createElement('div');
+    instructions.innerHTML = `
+        <div style="
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 500px;
+            text-align: right;
+        ">
+            <h3>📋 خطوات رفع الملف لـ GitHub:</h3>
+            <ol style="text-align: right; padding-right: 20px;">
+                <li>انقر على الرابط أعلاه لتحميل الملف</li>
+                <li>اذهب لمشروعك على GitHub</li>
+                <li>انقر على <strong>Add file</strong> → <strong>Upload files</strong></li>
+                <li>اسحب الملف <code>pump-data.json</code> وأفلته</li>
+                <li>اكتب: <code>"إنشاء ملف البيانات"</code></li>
+                <li>انقر <strong>Commit changes</strong></li>
+            </ol>
+        </div>
+    `;
+    
+    document.body.appendChild(instructions);
+    
+    console.log("✅ جاهز لتحميل ملف pump-data.json");
+}
+
+// استدعاء الدالة بعد تحميل الصفحة
+setTimeout(createDataFile, 2000);
         // ============================================
         // إعدادات النظام
         // ============================================
@@ -1285,4 +1356,5 @@
     </script>
 </body>
 </html>
+
 
