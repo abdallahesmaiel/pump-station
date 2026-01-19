@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>سجل محطة نموزج 8 - نموذج إلكتروني</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -75,6 +77,7 @@
             display: flex;
             flex-direction: column;
             width: 100%;
+            position: relative;
         }
         
         .info-item label {
@@ -96,6 +99,120 @@
         
         input[type="date"] {
             min-height: 48px;
+        }
+        /* تخصيص لمربع اسم المحطة */
+        
+        #station-name-container {
+            position: relative;
+        }
+        
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .autocomplete-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        
+        .autocomplete-item:hover {
+            background: #f0f7ff;
+        }
+        
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+        
+        .station-name {
+            font-weight: bold;
+            color: #2c5aa0;
+        }
+        
+        .last-date {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 3px;
+        }
+        
+        .load-data-btn {
+            position: absolute;
+            left: 5px;
+            top: 35px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 10px;
+            cursor: pointer;
+            display: none;
+            font-size: 12px;
+            z-index: 100;
+        }
+        
+        .load-data-btn:hover {
+            background: #218838;
+        }
+        /* نافذة تأكيد التحميل */
+        
+        .confirm-load-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .confirm-load-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .confirm-load-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .confirm-load-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .btn-confirm {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-cancel {
+            background: #dc3545;
+            color: white;
         }
         
         .controls {
@@ -504,7 +621,9 @@
                 padding: 10px;
             }
             .controls,
-            .btn {
+            .btn,
+            .autocomplete-dropdown,
+            .load-data-btn {
                 display: none !important;
             }
             .table-container {
@@ -584,9 +703,13 @@
             <p>نموذج الكتروني - مع إمكانية التصدير إلى Excel</p>
 
             <div class="header-info">
-                <div class="info-item">
+                <div class="info-item" id="station-name-container">
                     <label for="station-name">اسم المحطة:</label>
                     <input type="text" id="station-name" value="" class="keyboard-text" placeholder="أدخل اسم المحطة" />
+                    <button class="load-data-btn" id="load-data-btn">
+                        <i class="fas fa-download"></i> تحميل آخر بيانات
+                    </button>
+                    <div class="autocomplete-dropdown" id="station-autocomplete"></div>
                 </div>
                 <div class="header-name">
                     <div class="info-item">
@@ -609,6 +732,19 @@
                 </div>
             </div>
         </header>
+
+        <!-- نافذة تأكيد التحميل -->
+        <div class="confirm-load-modal" id="confirm-load-modal">
+            <div class="confirm-load-content">
+                <h3><i class="fas fa-exclamation-triangle"></i> تأكيد تحميل البيانات</h3>
+                <p>تم العثور على بيانات سابقة لهذه المحطة بتاريخ <span id="found-date"></span>.</p>
+                <p>هل تريد تحميل آخر البيانات المحفوظة؟</p>
+                <div class="confirm-load-buttons">
+                    <button class="btn-confirm" id="confirm-load">نعم، تحميل</button>
+                    <button class="btn-cancel" id="cancel-load">لا، بيانات جديدة</button>
+                </div>
+            </div>
+        </div>
 
         <div class="controls">
             <div class="btn-group">
@@ -1274,16 +1410,25 @@
                 }
             }, 1000);
         });
-        // نظام حفظ بيانات تلقائي صامت تماماً
-        const STORAGE_KEY = 'pump_data';
 
-        // حفظ البيانات (بدون أي إشعارات)
-        function silentSave() {
+        // ============================================
+        // نظام متعدد المحطات مع تحميل تلقائي للبيانات
+        // ============================================
+
+        const STORAGE_KEY_PREFIX = 'pump_data_';
+        const STATIONS_INDEX_KEY = 'pump_stations_index';
+
+        // وظيفة لحفظ البيانات
+        function saveStationData() {
+            const stationName = document.getElementById('station-name').value.trim();
+            if (!stationName) return;
+
             const data = {
-                station: document.getElementById('station-name').value,
+                station: stationName,
                 operator: document.getElementById('operator-name').value,
                 date: document.getElementById('record-date').value,
                 shift: document.getElementById('shift').value,
+                saveDate: new Date().toISOString(),
 
                 // بيانات الجدول
                 inputs: {},
@@ -1304,70 +1449,276 @@
 
             // حفظ حقول الجدول
             document.querySelectorAll('.data-input').forEach(input => {
-                if (input.value) {
-                    data.inputs[input.id] = input.value;
-                }
+                data.inputs[input.id] = input.value;
             });
 
-            // الحفظ في الخلفية
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-            } catch (e) {
-                // لا شيء - حفظ صامت
+            // حفظ البيانات
+            const storageKey = STORAGE_KEY_PREFIX + stationName;
+            localStorage.setItem(storageKey, JSON.stringify(data));
+
+            // تحديث الفهرس
+            updateStationsIndex(stationName, data.saveDate);
+        }
+
+        // وظيفة لتحديث فهرس المحطات
+        function updateStationsIndex(stationName, saveDate) {
+            let index = JSON.parse(localStorage.getItem(STATIONS_INDEX_KEY)) || [];
+
+            // إزالة المحطة إذا كانت موجودة
+            index = index.filter(item => item.name !== stationName);
+
+            // إضافة المحطة بأحدث تاريخ
+            index.push({
+                name: stationName,
+                lastSave: saveDate
+            });
+
+            // ترتيب المحطات أبجدياً
+            index.sort((a, b) => a.name.localeCompare(b.name));
+
+            localStorage.setItem(STATIONS_INDEX_KEY, JSON.stringify(index));
+        }
+
+        // وظيفة لتحميل بيانات المحطة
+        function loadStationData(stationName) {
+            const storageKey = STORAGE_KEY_PREFIX + stationName;
+            const saved = localStorage.getItem(storageKey);
+            if (!saved) return null;
+
+            return JSON.parse(saved);
+        }
+
+        // وظيفة للحصول على قائمة المحطات
+        function getStationsList() {
+            return JSON.parse(localStorage.getItem(STATIONS_INDEX_KEY)) || [];
+        }
+
+        // وظيفة للبحث عن المحطات (للتكملة التلقائية)
+        function searchStations(query) {
+            const stations = getStationsList();
+            return stations.filter(station =>
+                station.name.toLowerCase().includes(query.toLowerCase())
+            );
+        }
+
+        // عرض قائمة التكملة التلقائية
+        function showAutocomplete(stations) {
+            const dropdown = document.getElementById('station-autocomplete');
+            dropdown.innerHTML = '';
+
+            if (stations.length === 0) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            stations.forEach(station => {
+                const div = document.createElement('div');
+                div.className = 'autocomplete-item';
+                div.innerHTML = `
+                    <div class="station-name">${station.name}</div>
+                    <div class="last-date">آخر حفظ: ${new Date(station.lastSave).toLocaleDateString('ar-SA')}</div>
+                `;
+
+                div.addEventListener('click', () => {
+                    document.getElementById('station-name').value = station.name;
+                    dropdown.style.display = 'none';
+                    checkAndLoadStationData(station.name);
+                });
+
+                dropdown.appendChild(div);
+            });
+
+            dropdown.style.display = 'block';
+        }
+
+        // التحقق وتحميل بيانات المحطة
+        function checkAndLoadStationData(stationName) {
+            const data = loadStationData(stationName);
+            if (data) {
+                // عرض زر تحميل البيانات
+                const loadBtn = document.getElementById('load-data-btn');
+                loadBtn.style.display = 'block';
+                loadBtn.dataset.stationName = stationName;
+
+                // عرض رسالة صغيرة للمستخدم
+                showTemporaryMessage(`تم العثور على بيانات سابقة لهذه المحطة`, 'info');
+            } else {
+                document.getElementById('load-data-btn').style.display = 'none';
             }
         }
 
-        // تحميل البيانات (بدون إشعارات)
-        function silentLoad() {
-            try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (!saved) return;
+        // تحميل بيانات المحطة
+        function loadDataForStation(stationName) {
+            const data = loadStationData(stationName);
+            if (!data) return false;
 
-                const data = JSON.parse(saved);
+            // تحميل البيانات الأساسية
+            document.getElementById('station-name').value = data.station || '';
+            document.getElementById('operator-name').value = data.operator || '';
+            document.getElementById('record-date').value = data.date || '';
+            document.getElementById('shift').value = data.shift || 'صباحية';
 
-                // تحميل البيانات الأساسية
-                document.getElementById('station-name').value = data.station || '';
-                document.getElementById('operator-name').value = data.operator || '';
-                document.getElementById('record-date').value = data.date || '';
-                document.getElementById('shift').value = data.shift || 'صباحية';
+            // تحميل بيانات الجدول
+            if (data.inputs) {
+                Object.entries(data.inputs).forEach(([id, value]) => {
+                    const input = document.getElementById(id);
+                    if (input) input.value = value;
+                });
+            }
 
-                // تحميل بيانات الجدول
-                if (data.inputs) {
-                    Object.entries(data.inputs).forEach(([id, value]) => {
-                        const input = document.getElementById(id);
-                        if (input) input.value = value;
-                    });
+            // تحميل البيانات الإضافية
+            document.getElementById('waterPath').value = data.waterPath || '';
+            document.getElementById('tank1Level').value = data.tank1 || '';
+            document.getElementById('tank2Level').value = data.tank2 || '';
+            document.getElementById('tank3Level').value = data.tank3 || '';
+            document.getElementById('compressor1').value = data.comp1 || '';
+            document.getElementById('compressor2').value = data.comp2 || '';
+            document.getElementById('com').value = data.compressor || '';
+            document.getElementById('startTime').value = data.start || '06:00';
+            document.getElementById('endTime').value = data.end || '24:00';
+            document.getElementById('totalHours').value = data.hours || '';
+            document.getElementById('dailyNotes').value = data.notes || '';
+
+            // حساب الساعات
+            setTimeout(calculateTotalHours, 100);
+
+            return true;
+        }
+
+        // عرض رسالة مؤقتة
+        function showTemporaryMessage(message, type = 'info') {
+            const existingMsg = document.querySelector('.temp-message');
+            if (existingMsg) existingMsg.remove();
+
+            const msg = document.createElement('div');
+            msg.className = `temp-message temp-${type}`;
+            msg.textContent = message;
+            msg.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'info' ? '#2c5aa0' : '#28a745'};
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                z-index: 10000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                animation: slideIn 0.3s ease;
+            `;
+
+            document.body.appendChild(msg);
+
+            setTimeout(() => {
+                msg.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => msg.remove(), 300);
+            }, 3000);
+
+            // إضافة أنيميشن
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
                 }
-
-                // تحميل البيانات الإضافية
-                document.getElementById('waterPath').value = data.waterPath || '';
-                document.getElementById('tank1Level').value = data.tank1 || '';
-                document.getElementById('tank2Level').value = data.tank2 || '';
-                document.getElementById('tank3Level').value = data.tank3 || '';
-                document.getElementById('compressor1').value = data.comp1 || '';
-                document.getElementById('compressor2').value = data.comp2 || '';
-                document.getElementById('com').value = data.compressor || '';
-                document.getElementById('startTime').value = data.start || '06:00';
-                document.getElementById('endTime').value = data.end || '24:00';
-                document.getElementById('totalHours').value = data.hours || '';
-                document.getElementById('dailyNotes').value = data.notes || '';
-
-                // حساب الساعات
-                setTimeout(calculateTotalHours, 100);
-
-            } catch (e) {
-                // لا شيء - تحميل صامت
-            }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
         }
 
+        // ============================================
+        // إعدادات الأحداث
+        // ============================================
+
+        // حدث إدخال اسم المحطة
+        const stationInput = document.getElementById('station-name');
+        const autocompleteDropdown = document.getElementById('station-autocomplete');
+        const loadDataBtn = document.getElementById('load-data-btn');
+        const confirmModal = document.getElementById('confirm-load-modal');
+        const confirmLoadBtn = document.getElementById('confirm-load');
+        const cancelLoadBtn = document.getElementById('cancel-load');
+
+        // عند كتابة اسم المحطة
+        stationInput.addEventListener('input', function() {
+            const query = this.value.trim();
+
+            // إخفاء زر التحميل
+            loadDataBtn.style.display = 'none';
+
+            // إظهار التكملة التلقائية
+            if (query.length >= 2) {
+                const stations = searchStations(query);
+                showAutocomplete(stations);
+            } else {
+                autocompleteDropdown.style.display = 'none';
+            }
+        });
+
+        // عند الخروج من حقل اسم المحطة
+        stationInput.addEventListener('blur', function() {
+            setTimeout(() => {
+                autocompleteDropdown.style.display = 'none';
+                const stationName = this.value.trim();
+                if (stationName) {
+                    checkAndLoadStationData(stationName);
+                }
+            }, 200);
+        });
+
+        // عند الضغط على زر تحميل البيانات
+        loadDataBtn.addEventListener('click', function() {
+            const stationName = this.dataset.stationName;
+            const data = loadStationData(stationName);
+
+            if (data) {
+                document.getElementById('found-date').textContent =
+                    new Date(data.saveDate).toLocaleDateString('ar-SA');
+                confirmModal.style.display = 'flex';
+                confirmModal.dataset.stationName = stationName;
+            }
+        });
+
+        // تأكيد تحميل البيانات
+        confirmLoadBtn.addEventListener('click', function() {
+            const stationName = confirmModal.dataset.stationName;
+            if (loadDataForStation(stationName)) {
+                showTemporaryMessage('تم تحميل بيانات المحطة بنجاح', 'success');
+            }
+            confirmModal.style.display = 'none';
+        });
+
+        // إلغاء تحميل البيانات
+        cancelLoadBtn.addEventListener('click', function() {
+            confirmModal.style.display = 'none';
+            showTemporaryMessage('يمكنك البدء بإدخال بيانات جديدة', 'info');
+        });
+
+        // إغلاق النافذة عند الضغط خارجها
+        confirmModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+
+        // ============================================
         // إعداد الحفظ التلقائي
-        function setupSilentAutoSave() {
-            // تأخير الحفظ لتجنب التكرار
+        // ============================================
+
+        function setupAutoSave() {
             let saveTimer;
+            let isSaving = false;
 
             function scheduleSave() {
                 clearTimeout(saveTimer);
-                saveTimer = setTimeout(silentSave, 1500);
+                saveTimer = setTimeout(() => {
+                    if (!isSaving) {
+                        isSaving = true;
+                        saveStationData();
+                        isSaving = false;
+                    }
+                }, 2000);
             }
 
             // مراقبة جميع الحقول
@@ -1377,27 +1728,55 @@
                 input.addEventListener('change', scheduleSave);
             });
 
-            // حفظ عند أي ضغط زر
+            // حفظ عند الضغط على الأزرار
             document.querySelectorAll('.btn').forEach(btn => {
                 btn.addEventListener('click', scheduleSave);
             });
 
-            // حفظ كل دقيقتين
-            setInterval(silentSave, 120000);
+            // حفظ كل 5 دقائق
+            setInterval(saveStationData, 300000);
 
             // حفظ عند مغادرة الصفحة
-            window.addEventListener('beforeunload', silentSave);
+            window.addEventListener('beforeunload', saveStationData);
         }
 
+        // ============================================
         // التحميل التلقائي عند بدء الصفحة
+        // ============================================
+
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                silentLoad();
-                setupSilentAutoSave();
-            }, 300);
+            // إعداد الحفظ التلقائي
+            setupAutoSave();
+
+            // تحميل آخر محطة تم استخدامها
+            const lastStation = localStorage.getItem('last_used_station');
+            if (lastStation) {
+                stationInput.value = lastStation;
+                setTimeout(() => {
+                    checkAndLoadStationData(lastStation);
+                }, 500);
+            }
+
+            // إخفاء النافذة عند الضغط على ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    confirmModal.style.display = 'none';
+                    autocompleteDropdown.style.display = 'none';
+                }
+            });
         });
 
-        // تعديل زر الإعادة ليقوم بالحفظ أولاً
+        // تعديل دالة الحفظ لحفظ آخر محطة مستخدمة
+        const originalSaveStationData = saveStationData;
+        saveStationData = function() {
+            const stationName = document.getElementById('station-name').value.trim();
+            if (stationName) {
+                localStorage.setItem('last_used_station', stationName);
+            }
+            return originalSaveStationData();
+        };
+
+        // تعديل دالة الإعادة
         const originalResetFunction = function() {
             document.getElementById("station-name").value = "محطة الضخ الرئيسية";
             document.getElementById("operator-name").value = "";
@@ -1430,23 +1809,94 @@
 
         document.getElementById("resetBtn").addEventListener("click", function() {
             if (confirm("هل تريد إعادة تعيين جميع البيانات؟")) {
-                // حفظ نسخة احتياطية صامتة
-                try {
-                    const currentData = localStorage.getItem(STORAGE_KEY);
-                    if (currentData) {
-                        localStorage.setItem('last_backup', currentData);
-                    }
-                } catch (e) {
-                    // لا شيء
-                }
-
-                // تنفيذ الإعادة
                 originalResetFunction();
+                showTemporaryMessage("تم إعادة تعيين النموذج", "info");
 
-                // حفظ الحالة الجديدة
-                setTimeout(silentSave, 1000);
+                // حفظ حالة جديدة بعد الإعادة
+                setTimeout(saveStationData, 1000);
             }
         });
+        // إعداد Firebase (تضعه في مكان واضح)
+        const firebaseConfig = {
+            apiKey: "AIzaSyB...",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abc123def456"
+        };
+
+        // تهيئة Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // وظائف Firebase
+        async function saveStationDataToFirebase() {
+            const stationName = document.getElementById('station-name').value.trim();
+            if (!stationName) return;
+
+            const data = {
+                station: stationName,
+                operator: document.getElementById('operator-name').value,
+                date: document.getElementById('record-date').value,
+                shift: document.getElementById('shift').value,
+                saveDate: new Date().toISOString(),
+                inputs: {},
+                waterPath: document.getElementById('waterPath').value,
+                tank1: document.getElementById('tank1Level').value,
+                tank2: document.getElementById('tank2Level').value,
+                tank3: document.getElementById('tank3Level').value,
+                comp1: document.getElementById('compressor1').value,
+                comp2: document.getElementById('compressor2').value,
+                compressor: document.getElementById('com').value,
+                start: document.getElementById('startTime').value,
+                end: document.getElementById('endTime').value,
+                hours: document.getElementById('totalHours').value,
+                notes: document.getElementById('dailyNotes').value
+            };
+
+            document.querySelectorAll('.data-input').forEach(input => {
+                data.inputs[input.id] = input.value;
+            });
+
+            try {
+                await db.collection('stations').doc(stationName).set(data);
+                console.log('تم الحفظ على Firebase');
+            } catch (error) {
+                console.error('خطأ في الحفظ:', error);
+            }
+        }
+
+        async function loadStationDataFromFirebase(stationName) {
+            try {
+                const doc = await db.collection('stations').doc(stationName).get();
+                if (doc.exists) {
+                    return doc.data();
+                }
+                return null;
+            } catch (error) {
+                console.error('خطأ في التحميل:', error);
+                return null;
+            }
+        }
+
+        async function searchStationsFromFirebase(query) {
+            try {
+                const snapshot = await db.collection('stations')
+                    .where('station', '>=', query)
+                    .where('station', '<=', query + '\uf8ff')
+                    .limit(10)
+                    .get();
+
+                return snapshot.docs.map(doc => ({
+                    name: doc.data().station,
+                    lastSave: doc.data().saveDate
+                }));
+            } catch (error) {
+                console.error('خطأ في البحث:', error);
+                return [];
+            }
+        }
     </script>
 </body>
 
