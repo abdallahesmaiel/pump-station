@@ -761,7 +761,7 @@
                 name: "المنسوب",
                 id: "level1",
                 unit: "سم",
-                inputType: "number",
+                inputType: "mixed",
                 placeholder: "أدخل المنسوب بالسم"
             }, {
                 name: "قراءة عداد الطاقة",
@@ -1273,6 +1273,179 @@
                     alert("مرحباً! يمكنك إدخال البيانات بالكتابة العادية أو الأرقام حسب نوع الحقل. الحقول الرقمية تفتح لوحة أرقام تلقائياً.");
                 }
             }, 1000);
+        });
+        // نظام حفظ بيانات تلقائي صامت تماماً
+        const STORAGE_KEY = 'pump_data';
+
+        // حفظ البيانات (بدون أي إشعارات)
+        function silentSave() {
+            const data = {
+                station: document.getElementById('station-name').value,
+                operator: document.getElementById('operator-name').value,
+                date: document.getElementById('record-date').value,
+                shift: document.getElementById('shift').value,
+
+                // بيانات الجدول
+                inputs: {},
+
+                // بيانات إضافية
+                waterPath: document.getElementById('waterPath').value,
+                tank1: document.getElementById('tank1Level').value,
+                tank2: document.getElementById('tank2Level').value,
+                tank3: document.getElementById('tank3Level').value,
+                comp1: document.getElementById('compressor1').value,
+                comp2: document.getElementById('compressor2').value,
+                compressor: document.getElementById('com').value,
+                start: document.getElementById('startTime').value,
+                end: document.getElementById('endTime').value,
+                hours: document.getElementById('totalHours').value,
+                notes: document.getElementById('dailyNotes').value
+            };
+
+            // حفظ حقول الجدول
+            document.querySelectorAll('.data-input').forEach(input => {
+                if (input.value) {
+                    data.inputs[input.id] = input.value;
+                }
+            });
+
+            // الحفظ في الخلفية
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            } catch (e) {
+                // لا شيء - حفظ صامت
+            }
+        }
+
+        // تحميل البيانات (بدون إشعارات)
+        function silentLoad() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (!saved) return;
+
+                const data = JSON.parse(saved);
+
+                // تحميل البيانات الأساسية
+                document.getElementById('station-name').value = data.station || '';
+                document.getElementById('operator-name').value = data.operator || '';
+                document.getElementById('record-date').value = data.date || '';
+                document.getElementById('shift').value = data.shift || 'صباحية';
+
+                // تحميل بيانات الجدول
+                if (data.inputs) {
+                    Object.entries(data.inputs).forEach(([id, value]) => {
+                        const input = document.getElementById(id);
+                        if (input) input.value = value;
+                    });
+                }
+
+                // تحميل البيانات الإضافية
+                document.getElementById('waterPath').value = data.waterPath || '';
+                document.getElementById('tank1Level').value = data.tank1 || '';
+                document.getElementById('tank2Level').value = data.tank2 || '';
+                document.getElementById('tank3Level').value = data.tank3 || '';
+                document.getElementById('compressor1').value = data.comp1 || '';
+                document.getElementById('compressor2').value = data.comp2 || '';
+                document.getElementById('com').value = data.compressor || '';
+                document.getElementById('startTime').value = data.start || '06:00';
+                document.getElementById('endTime').value = data.end || '24:00';
+                document.getElementById('totalHours').value = data.hours || '';
+                document.getElementById('dailyNotes').value = data.notes || '';
+
+                // حساب الساعات
+                setTimeout(calculateTotalHours, 100);
+
+            } catch (e) {
+                // لا شيء - تحميل صامت
+            }
+        }
+
+        // إعداد الحفظ التلقائي
+        function setupSilentAutoSave() {
+            // تأخير الحفظ لتجنب التكرار
+            let saveTimer;
+
+            function scheduleSave() {
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(silentSave, 1500);
+            }
+
+            // مراقبة جميع الحقول
+            const allInputs = document.querySelectorAll('input, textarea, select');
+            allInputs.forEach(input => {
+                input.addEventListener('input', scheduleSave);
+                input.addEventListener('change', scheduleSave);
+            });
+
+            // حفظ عند أي ضغط زر
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('click', scheduleSave);
+            });
+
+            // حفظ كل دقيقتين
+            setInterval(silentSave, 120000);
+
+            // حفظ عند مغادرة الصفحة
+            window.addEventListener('beforeunload', silentSave);
+        }
+
+        // التحميل التلقائي عند بدء الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                silentLoad();
+                setupSilentAutoSave();
+            }, 300);
+        });
+
+        // تعديل زر الإعادة ليقوم بالحفظ أولاً
+        const originalResetFunction = function() {
+            document.getElementById("station-name").value = "محطة الضخ الرئيسية";
+            document.getElementById("operator-name").value = "";
+            document.getElementById("record-date").valueAsDate = new Date();
+            document.getElementById("shift").value = "صباحية";
+
+            document.getElementById("waterPath").value = "";
+            document.getElementById("tank1Level").value = "";
+            document.getElementById("tank2Level").value = "";
+            document.getElementById("tank3Level").value = "";
+            document.getElementById("compressor1").value = "";
+            document.getElementById("compressor2").value = "";
+            document.getElementById("com").value = "";
+            document.getElementById("startTime").value = "06:00";
+            document.getElementById("endTime").value = "24:00";
+            document.getElementById("totalHours").value = "";
+            document.getElementById("dailyNotes").value = "";
+
+            document.querySelectorAll('.data-input').forEach(input => {
+                input.value = "";
+            });
+
+            while (pumpUnits.length > 3) {
+                pumpUnits.pop();
+            }
+
+            generateTable();
+            calculateTotalHours();
+        };
+
+        document.getElementById("resetBtn").addEventListener("click", function() {
+            if (confirm("هل تريد إعادة تعيين جميع البيانات؟")) {
+                // حفظ نسخة احتياطية صامتة
+                try {
+                    const currentData = localStorage.getItem(STORAGE_KEY);
+                    if (currentData) {
+                        localStorage.setItem('last_backup', currentData);
+                    }
+                } catch (e) {
+                    // لا شيء
+                }
+
+                // تنفيذ الإعادة
+                originalResetFunction();
+
+                // حفظ الحالة الجديدة
+                setTimeout(silentSave, 1000);
+            }
         });
     </script>
 </body>
