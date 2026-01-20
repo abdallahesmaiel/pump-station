@@ -4,20 +4,20 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>سجل محطة نموزج 8 - نموذج إلكتروني</title>
+    <title>سجل محطة نموذج 8 - نموذج إلكتروني</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         * {
             box-sizing: border-box;
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
         }
         
         body {
             margin: 0;
-            padding: 10px;
-            background-color: #f5f9ff;
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
             color: #333;
             direction: rtl;
             font-size: 14px;
@@ -28,47 +28,68 @@
         .container {
             max-width: 100%;
             margin: 0 auto;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            padding: 15px;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 46, 109, 0.15);
+            padding: 20px;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            border: 1px solid #e1e8f5;
         }
         
         header {
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #2c5aa0;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #2d7dd2;
+            background: linear-gradient(to right, #f8fbff, #e8f2ff);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, #2d7dd2, #4a9ce9);
         }
         
         h1 {
-            color: #2c5aa0;
-            margin-bottom: 5px;
-            font-size: 1.4rem;
-            line-height: 1.3;
+            color: #1a5a96;
+            margin-bottom: 8px;
+            font-size: 1.6rem;
+            line-height: 1.4;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
         
         h1 i {
-            font-size: 1.2rem;
-            margin-left: 8px;
+            font-size: 1.4rem;
+            margin-left: 10px;
+            color: #2d7dd2;
         }
         
         .header-info {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            background-color: #eef5ff;
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 12px;
+            gap: 15px;
+            background: linear-gradient(145deg, #ffffff, #f0f7ff);
+            padding: 18px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 1px solid #d6e4ff;
+            box-shadow: 0 4px 12px rgba(45, 125, 210, 0.08);
         }
         
         .header-name {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 15px;
         }
         
         .info-item {
@@ -78,154 +99,199 @@
         }
         
         .info-item label {
-            font-weight: bold;
-            color: #2c5aa0;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1a5a96;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .info-item label i {
+            color: #2d7dd2;
+            font-size: 1rem;
         }
         
         .info-item input,
         .info-item select {
-            padding: 10px 12px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            padding: 12px 15px;
+            border: 2px solid #d1ddec;
+            border-radius: 8px;
             font-size: 16px !important;
             width: 100%;
-            height: 48px;
+            height: 50px;
+            background-color: #ffffff;
+            transition: all 0.3s ease;
+            color: #2c3e50;
         }
         
         input[type="date"] {
-            min-height: 48px;
+            min-height: 50px;
         }
         
         .controls {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin: 15px 0;
-            padding: 12px;
-            background-color: #f0f7ff;
-            border-radius: 8px;
+            gap: 12px;
+            margin: 20px 0;
+            padding: 18px;
+            background: linear-gradient(145deg, #f8fbff, #e8f2ff);
+            border-radius: 12px;
+            border: 1px solid #d6e4ff;
         }
         
         .btn-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
             justify-content: center;
         }
         
         .btn {
-            padding: 14px 15px;
+            padding: 16px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 15px;
-            font-weight: bold;
+            font-size: 16px;
+            font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             transition: all 0.3s;
             flex: 1;
-            min-width: 140px;
-            height: 52px;
+            min-width: 150px;
+            height: 56px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .btn:hover::after {
+            opacity: 1;
         }
         
         .btn i {
-            font-size: 18px;
+            font-size: 20px;
         }
         
         .btn-primary {
-            background-color: #2c5aa0;
+            background: linear-gradient(135deg, #2d7dd2 0%, #1a5a96 100%);
             color: white;
         }
         
         .btn-primary:hover {
-            background-color: #1d3d75;
+            background: linear-gradient(135deg, #1a5a96 0%, #134274 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(26, 90, 150, 0.3);
         }
         
         .btn-success {
-            background-color: #28a745;
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
             color: white;
         }
         
         .btn-success:hover {
-            background-color: #1e7e34;
+            background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(30, 126, 52, 0.3);
         }
         
         .btn-secondary {
-            background-color: #6c757d;
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
             color: white;
         }
         
         .btn-secondary:hover {
-            background-color: #545b62;
+            background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(108, 117, 125, 0.3);
         }
         
         .table-container {
             width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            margin: 15px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #e1e8f5;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
         
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             min-width: 600px;
         }
         
         th,
         td {
-            border: 1px solid #ddd;
-            padding: 12px 8px;
+            border: 1px solid #e1e8f5;
+            padding: 14px 10px;
             text-align: center;
             font-size: 14px;
-            min-width: 90px;
+            min-width: 95px;
         }
         
         th {
-            background-color: #2c5aa0;
+            background: linear-gradient(to bottom, #2d7dd2, #1a5a96);
             color: white;
-            font-weight: bold;
+            font-weight: 700;
             position: sticky;
             top: 0;
             z-index: 10;
-            font-size: 13px;
+            font-size: 14px;
+            border-bottom: 2px solid #134274;
         }
         
         tr:nth-child(even) {
-            background-color: #f9f9f9;
+            background-color: #f9fbff;
         }
         
         tr:hover {
             background-color: #f0f7ff;
+            transform: scale(1.002);
+            transition: transform 0.2s;
         }
         
         .unit-header {
-            background-color: #e7f1ff !important;
-            font-weight: bold;
-            color: #1d3d75;
-            font-size: 15px;
-            padding: 15px 8px;
+            background: linear-gradient(to right, #e8f2ff, #d6e4ff) !important;
+            font-weight: 800;
+            color: #1a5a96;
+            font-size: 16px;
+            padding: 18px 10px;
+            border-bottom: 2px solid #2d7dd2;
         }
         
         input[type="text"],
         input[type="number"],
         select {
             width: 100%;
-            padding: 12px 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 13px 10px;
+            border: 2px solid #d1ddec;
+            border-radius: 8px;
             text-align: center;
             font-size: 16px !important;
-            height: 44px;
+            height: 46px;
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
+            background-color: #ffffff;
+            transition: all 0.3s ease;
         }
         
         .input-text {
@@ -243,43 +309,50 @@
         input:focus,
         select:focus,
         textarea:focus {
-            outline: 2px solid #2c5aa0;
-            outline-offset: -1px;
-            border-color: #2c5aa0;
+            outline: none;
+            border-color: #2d7dd2;
+            box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.2);
+            transform: scale(1.02);
+            transition: all 0.2s;
         }
         
         .section-title,
         .section-to,
         .section-tox {
-            background-color: #1d3d75;
+            background: linear-gradient(to right, #2d7dd2, #4a9ce9);
             color: white;
-            padding: 15px 10px;
-            margin: 20px 0 15px 0;
-            border-radius: 5px;
-            font-size: 16px;
+            padding: 18px 15px;
+            margin: 25px 0 18px 0;
+            border-radius: 10px;
+            font-size: 17px;
             text-align: center;
-            line-height: 1.4;
+            line-height: 1.5;
+            box-shadow: 0 4px 12px rgba(45, 125, 210, 0.2);
+            position: relative;
+            overflow: hidden;
         }
         
         .section-title i,
         .section-to i,
         .section-tox i {
-            margin-left: 8px;
-            font-size: 18px;
+            margin-left: 10px;
+            font-size: 20px;
         }
         
         .footer-section {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f0f7ff;
-            border-radius: 8px;
+            margin-top: 25px;
+            padding: 20px;
+            background: linear-gradient(145deg, #f8fbff, #e8f2ff);
+            border-radius: 12px;
+            border: 1px solid #d6e4ff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
         
         .footer-row {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 18px;
+            margin-bottom: 18px;
         }
         
         .footer-col,
@@ -291,46 +364,64 @@
         .footer-col label,
         .footer-col1 label {
             display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #1d3d75;
-            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1a5a96;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .footer-col label i,
+        .footer-col1 label i {
+            color: #2d7dd2;
         }
         
         .notes {
-            margin-top: 15px;
+            margin-top: 20px;
         }
         
         textarea {
             width: 100%;
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            padding: 18px;
+            border: 2px solid #d1ddec;
+            border-radius: 10px;
             font-size: 16px !important;
-            height: 100px;
+            height: 120px;
             resize: vertical;
-            min-height: 100px;
-            line-height: 1.5;
+            min-height: 120px;
+            line-height: 1.6;
+            background-color: #ffffff;
+            transition: all 0.3s ease;
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
         }
         
         .time-slots {
             display: flex;
             justify-content: space-between;
-            background-color: #e7f1ff;
-            padding: 12px 8px;
-            border-radius: 5px;
-            margin-bottom: 10px;
+            background: linear-gradient(to right, #e8f2ff, #d6e4ff);
+            padding: 15px 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
             flex-wrap: wrap;
-            gap: 5px;
+            gap: 8px;
+            border: 1px solid #c5d4f0;
         }
         
         .time-slot {
-            font-weight: bold;
-            color: #1d3d75;
-            font-size: 13px;
+            font-weight: 800;
+            color: #1a5a96;
+            font-size: 14px;
             text-align: center;
             flex: 1;
-            min-width: 60px;
+            min-width: 65px;
+            padding: 8px 5px;
+            background-color: white;
+            border-radius: 8px;
+            border: 1px solid #d1ddec;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         }
         
         .text-input {
@@ -350,15 +441,15 @@
         
         @media (min-width: 768px) {
             body {
-                padding: 15px;
+                padding: 20px;
                 font-size: 16px;
             }
             .container {
-                padding: 20px;
-                border-radius: 10px;
+                padding: 25px;
+                border-radius: 20px;
             }
             h1 {
-                font-size: 1.7rem;
+                font-size: 2rem;
             }
             .header-info {
                 flex-direction: row;
@@ -366,7 +457,7 @@
             }
             .info-item {
                 flex: 1;
-                min-width: 200px;
+                min-width: 220px;
             }
             .header-name {
                 flex-direction: row;
@@ -375,14 +466,15 @@
             .controls {
                 flex-direction: row;
                 justify-content: space-between;
+                padding: 20px;
             }
             .btn-group {
                 flex-wrap: nowrap;
             }
             .btn {
-                min-width: 170px;
-                font-size: 16px;
-                height: 54px;
+                min-width: 180px;
+                font-size: 17px;
+                height: 58px;
             }
             .footer-row {
                 flex-direction: row;
@@ -391,106 +483,115 @@
             .footer-col,
             .footer-col1 {
                 flex: 1;
-                min-width: 200px;
+                min-width: 220px;
             }
             .time-slot {
-                font-size: 14px;
+                font-size: 15px;
+                min-width: 70px;
             }
             th,
             td {
-                padding: 14px 10px;
+                padding: 16px 12px;
                 font-size: 15px;
             }
             input[type="text"],
             input[type="number"],
             select {
-                font-size: 15px !important;
-                height: 42px;
+                font-size: 16px !important;
+                height: 48px;
             }
             textarea {
                 font-size: 16px !important;
-                height: 120px;
-            }
-        }
-        
-        @media (min-width: 1024px) {
-            body {
+                height: 140px;
                 padding: 20px;
-            }
-            .container {
-                max-width: 1400px;
-                padding: 25px;
-            }
-            h1 {
-                font-size: 1.9rem;
-            }
-            .controls {
-                padding: 15px;
-            }
-            .btn {
-                padding: 14px 25px;
-                font-size: 17px;
-                height: 56px;
-            }
-            .time-slots {
-                padding: 14px;
-            }
-            .time-slot {
-                font-size: 15px;
             }
             .section-title,
             .section-to,
             .section-tox {
                 font-size: 18px;
+                padding: 20px;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            body {
+                padding: 25px;
+            }
+            .container {
+                max-width: 1400px;
+                padding: 30px;
+            }
+            h1 {
+                font-size: 2.2rem;
+            }
+            .controls {
+                padding: 22px;
+            }
+            .btn {
+                padding: 18px 25px;
+                font-size: 18px;
+                height: 60px;
+            }
+            .time-slots {
                 padding: 18px;
+            }
+            .time-slot {
+                font-size: 16px;
+                min-width: 75px;
+            }
+            .section-title,
+            .section-to,
+            .section-tox {
+                font-size: 19px;
+                padding: 22px;
             }
             textarea {
                 font-size: 16px !important;
-                height: 130px;
+                height: 150px;
             }
         }
         
         @media (max-width: 360px) {
             body {
-                padding: 8px;
+                padding: 10px;
                 font-size: 14px;
             }
             .container {
-                padding: 10px;
+                padding: 15px;
             }
             h1 {
-                font-size: 1.3rem;
+                font-size: 1.5rem;
             }
             .btn {
-                padding: 12px 8px;
-                font-size: 14px;
-                min-width: 130px;
-                height: 50px;
+                padding: 14px 10px;
+                font-size: 15px;
+                min-width: 140px;
+                height: 54px;
             }
             .btn i {
-                font-size: 16px;
+                font-size: 18px;
             }
             th,
             td {
-                padding: 10px 6px;
+                padding: 12px 8px;
                 font-size: 13px;
             }
             input[type="text"],
             input[type="number"],
             select {
-                font-size: 15px !important;
-                padding: 10px 6px;
-                height: 42px;
+                font-size: 16px !important;
+                padding: 12px 8px;
+                height: 46px;
             }
             .time-slot {
-                font-size: 12px;
-                min-width: 55px;
+                font-size: 13px;
+                min-width: 60px;
             }
             .section-title,
             .section-to,
             .section-tox {
-                font-size: 15px;
-                padding: 12px 8px;
+                font-size: 16px;
+                padding: 15px 10px;
             }
         }
         
@@ -502,6 +603,7 @@
             .container {
                 box-shadow: none;
                 padding: 10px;
+                border: 1px solid #ccc;
             }
             .controls,
             .btn {
@@ -509,36 +611,42 @@
             }
             .table-container {
                 overflow: visible;
+                border: 1px solid #ccc;
             }
             table {
                 min-width: 100%;
+                border: 1px solid #ccc;
             }
             input,
             textarea {
-                border: none;
+                border: 1px solid #ccc !important;
                 background: transparent;
+            }
+            .header-info,
+            .footer-section {
+                border: 1px solid #ccc;
             }
         }
         
         @media (hover: none) and (pointer: coarse) {
             .btn {
-                min-height: 52px;
-                padding: 16px 15px;
+                min-height: 56px;
+                padding: 18px 15px;
             }
             input,
             select,
             textarea {
                 font-size: 18px !important;
-                min-height: 50px;
+                min-height: 52px;
             }
             input[type="text"],
             input[type="number"] {
                 font-size: 18px !important;
-                height: 50px;
+                height: 52px;
             }
             .info-item input,
             .info-item select {
-                height: 52px;
+                height: 54px;
             }
         }
         
@@ -565,42 +673,99 @@
         html {
             scroll-behavior: smooth;
         }
+        /* تخصيص شريط التمرير */
         
-        input:focus,
-        select:focus,
-        textarea:focus {
-            transform: scale(1.02);
-            transition: transform 0.2s;
+         ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+         ::-webkit-scrollbar-track {
+            background: #f1f5ff;
+            border-radius: 5px;
+        }
+        
+         ::-webkit-scrollbar-thumb {
+            background: #2d7dd2;
+            border-radius: 5px;
+        }
+        
+         ::-webkit-scrollbar-thumb:hover {
+            background: #1a5a96;
+        }
+        /* تحسينات للأجهزة التي تدعم اللمس */
+        
+        @media (hover: none) {
+            .btn:hover {
+                transform: none;
+            }
+            input:focus,
+            select:focus,
+            textarea:focus {
+                transform: none;
+            }
+        }
+        /* تأثيرات خاصة */
+        
+        .info-item input:valid,
+        .info-item select:valid {
+            border-color: #28a745;
+        }
+        
+        .info-item input:invalid:not(:placeholder-shown),
+        .info-item select:invalid:not(:placeholder-shown) {
+            border-color: #dc3545;
+        }
+        /* تحسينات للطباعة */
+        
+        @media print {
+            .btn,
+            .controls,
+            .time-slots {
+                display: none !important;
+            }
+            .container {
+                box-shadow: none;
+                border: 1px solid #000;
+            }
+            table {
+                page-break-inside: auto;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <div class="container">
         <header>
             <h1>
-                <i class="fas fa-water"></i> سجل محطة نموزج 8 - نموذج إلكتروني
+                <i class="fas fa-water"></i> سجل محطة نموذج 8 - نموذج إلكتروني
             </h1>
-            <p>نموذج الكتروني - مع إمكانية التصدير إلى Excel</p>
+            <p style="color: #4a9ce9; font-weight: 500; margin-top: 5px;">نموذج الكتروني - مع إمكانية التصدير إلى Excel</p>
 
             <div class="header-info">
                 <div class="info-item">
-                    <label for="station-name">اسم المحطة:</label>
-                    <input type="text" id="station-name" value="" class="keyboard-text" placeholder="أدخل اسم المحطة" />
+                    <label for="station-name"><i class="fas fa-industry"></i> اسم المحطة:</label>
+                    <input type="text" id="station-name" value="محطة الضخ الرئيسية" class="keyboard-text" placeholder="أدخل اسم المحطة" />
                 </div>
                 <div class="header-name">
                     <div class="info-item">
-                        <label for="operator-name">اسم المشغل:</label>
+                        <label for="operator-name"><i class="fas fa-user"></i> اسم المشغل:</label>
                         <input type="text" id="operator-name" value="" class="keyboard-text" placeholder="أدخل اسم المشغل" />
                     </div>
 
                     <div class="info-item">
-                        <label for="record-date">التاريخ:</label>
+                        <label for="record-date"><i class="fas fa-calendar-alt"></i> التاريخ:</label>
                         <input type="date" id="record-date" value="" />
                     </div>
 
                     <div class="info-item">
-                        <label for="shift">الوردية:</label>
+                        <label for="shift"><i class="fas fa-clock"></i> الوردية:</label>
                         <select id="shift">
                             <option value="صباحية">صباحية</option>
                             <option value="مسائية">مسائية</option>
@@ -613,10 +778,10 @@
         <div class="controls">
             <div class="btn-group">
                 <button class="btn btn-primary" id="addRowBtn">
-                    <i class="fas fa-plus"></i> إضافة وحدة
+                    <i class="fas fa-plus-circle"></i> إضافة وحدة
                 </button>
                 <button class="btn btn-secondary" id="resetBtn">
-                    <i class="fas fa-redo"></i> إعادة تعيين
+                    <i class="fas fa-redo-alt"></i> إعادة تعيين
                 </button>
             </div>
 
@@ -667,34 +832,34 @@
         <div class="footer-section">
             <div class="footer-row">
                 <div class="footer-col">
-                    <label>الطرق المائي:</label>
+                    <label><i class="fas fa-water"></i> الطرق المائي:</label>
                     <input type="text" id="waterPath" class="keyboard-text" placeholder="أدخل حالة الطرق المائي (طبيعي / غير طبيعي)" />
                 </div>
 
                 <div class="footer-col">
-                    <label>مستوي المياه بالخزان الأول:</label>
+                    <label><i class="fas fa-tint"></i> مستوي المياه بالخزان الأول:</label>
                     <input type="text" id="tank1Level" class="keyboard-text" placeholder="أدخل المستوي (ممتلئ / متوسط / منخفض)" />
                 </div>
 
                 <div class="footer-col">
-                    <label>مستوي المياه بالخزان الثاني:</label>
+                    <label><i class="fas fa-tint"></i> مستوي المياه بالخزان الثاني:</label>
                     <input type="text" id="tank2Level" class="keyboard-text" placeholder="أدخل المستوي (ممتلئ / متوسط / منخفض)" />
                 </div>
             </div>
 
             <div class="footer-row">
                 <div class="footer-col">
-                    <label>مستوي المياه بالخزان الثالث:</label>
+                    <label><i class="fas fa-tint"></i> مستوي المياه بالخزان الثالث:</label>
                     <input type="text" id="tank3Level" class="keyboard-text" placeholder="أدخل المستوي (ممتلئ / متوسط / منخفض)" />
                 </div>
 
                 <div class="footer-col">
-                    <label>مستوي الزيت بالضاغط الأول / درجة الحرارة:</label>
+                    <label><i class="fas fa-compress-arrows-alt"></i> مستوي الزيت بالضاغط الأول / درجة الحرارة:</label>
                     <input type="text" id="compressor1" class="keyboard-text" placeholder="مثال: جيد / 45°C" />
                 </div>
 
                 <div class="footer-col">
-                    <label>مستوي الزيت بالضاغط الثاني / درجة الحرارة:</label>
+                    <label><i class="fas fa-compress-arrows-alt"></i> مستوي الزيت بالضاغط الثاني / درجة الحرارة:</label>
                     <input type="text" id="compressor2" class="keyboard-text" placeholder="مثال: جيد / 42°C" />
                 </div>
             </div>
@@ -704,47 +869,54 @@
             </div>
 
             <div class="footer-col1">
-                <label>مستوي الزيت بالضاغط / درجة الحرارة:</label>
+                <label><i class="fas fa-oil-can"></i> مستوي الزيت بالضاغط / درجة الحرارة:</label>
                 <input type="text" id="com" class="keyboard-text" placeholder="أدخل القراءة (مستوي زيت / درجة حرارة)" />
             </div>
 
             <div class="section-tox">
-                <i class="fas fa-tachometer-alt"></i> مواعيد التشغيل \ الإيقاف للمحطة
+                <i class="fas fa-clock"></i> مواعيد التشغيل \ الإيقاف للمحطة
             </div>
 
             <div class="footer-row">
                 <div class="footer-col">
-                    <label>توقيت تشغيل المحطة:</label>
+                    <label><i class="fas fa-play-circle"></i> توقيت تشغيل المحطة:</label>
                     <input type="time" id="startTime" value="06:00" />
                 </div>
 
                 <div class="footer-col">
-                    <label>توقيت إيقاف المحطة:</label>
+                    <label><i class="fas fa-stop-circle"></i> توقيت إيقاف المحطة:</label>
                     <input type="time" id="endTime" value="24:00" />
                 </div>
 
                 <div class="footer-col">
-                    <label>عدد ساعات تشغيل المحطة خلال اليوم:</label>
+                    <label><i class="fas fa-hourglass-half"></i> عدد ساعات تشغيل المحطة خلال اليوم:</label>
                     <input type="text" id="totalHours" class="keyboard-number" placeholder="أدخل عدد الساعات" />
                 </div>
             </div>
 
             <div class="notes">
-                <label for="dailyNotes">ملاحظات اليوم:</label>
+                <label for="dailyNotes" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                    <i class="fas fa-sticky-note"></i> ملاحظات اليوم:
+                </label>
                 <textarea id="dailyNotes" class="keyboard-text" placeholder="أدخل أي ملاحظات هامة عن تشغيل المحطة اليوم (مشاكل، إصلاحات، صيانة، ...)"></textarea>
             </div>
         </div>
 
         <div style="
             text-align: center;
-            margin-top: 25px;
-            color: #666;
-            font-size: 14px;
-            padding: 10px;
-            border-top: 1px solid #eee;
+            margin-top: 30px;
+            color: #6c757d;
+            font-size: 15px;
+            padding: 15px;
+            border-top: 1px solid #e1e8f5;
+            background: #f8fbff;
+            border-radius: 10px;
         ">
-            <p>
-                تم إنشاء هذا النموذج بواسطة نموذج سجل محطة ضخ الإلكتروني - نسخة 2025
+            <p style="margin-bottom: 5px; font-weight: 600;">
+                <i class="fas fa-cogs"></i> تم إنشاء هذا النموذج بواسطة نموذج سجل محطة ضخ الإلكتروني
+            </p>
+            <p style="color: #2d7dd2; font-weight: 500;">
+                نسخة 2025 - مع نظام حفظ تلقائي متطور
             </p>
         </div>
     </div>
