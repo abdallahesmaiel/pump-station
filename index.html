@@ -1490,7 +1490,14 @@
                 setTimeout(silentSave, 1000);
             }
         });
-        // --- إعدادات Firebase (يجب عليك إنشاء مشروع على Firebase واستبدال القيم هنا) ---
+        // Import the functions you need from the SDKs you need
+        import {
+            initializeApp
+        } from "firebase/app";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCKbEAIcSnw70CqUflBVFuv7KUq1VMjgTA",
             authDomain: "pump-station-system.firebaseapp.com",
@@ -1500,6 +1507,8 @@
             appId: "1:734880960614:web:79039329fcfe3888181da7"
         };
 
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
         // بدء تشغيل Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
