@@ -4,20 +4,56 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>سجل محطة نموذج 8 - نموذج إلكتروني</title>
+    <title>سجل محطة نموزج 8 - نموذج إلكتروني</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
+        /* تحسينات إضافية للتصميم */
+        
+        .sync-banner {
+            background: #2c5aa0;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sync-input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            font-weight: bold;
+            text-align: center;
+            color: #2c5aa0;
+        }
+        
+        .status-indicator {
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .online {
+            color: #28a745;
+        }
+        
+        .syncing {
+            color: #ffc107;
+        }
+        
         * {
             box-sizing: border-box;
-            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
         }
         
         body {
             margin: 0;
-            padding: 15px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            padding: 10px;
+            background-color: #f5f9ff;
             color: #333;
             direction: rtl;
             font-size: 14px;
@@ -28,68 +64,47 @@
         .container {
             max-width: 100%;
             margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(0, 46, 109, 0.15);
-            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 15px;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            border: 1px solid #e1e8f5;
         }
         
         header {
             text-align: center;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #2d7dd2;
-            background: linear-gradient(to right, #f8fbff, #e8f2ff);
-            border-radius: 12px;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(to right, #2d7dd2, #4a9ce9);
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #2c5aa0;
         }
         
         h1 {
-            color: #1a5a96;
-            margin-bottom: 8px;
-            font-size: 1.6rem;
-            line-height: 1.4;
-            font-weight: 700;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            color: #2c5aa0;
+            margin-bottom: 5px;
+            font-size: 1.4rem;
+            line-height: 1.3;
         }
         
         h1 i {
-            font-size: 1.4rem;
-            margin-left: 10px;
-            color: #2d7dd2;
+            font-size: 1.2rem;
+            margin-left: 8px;
         }
         
         .header-info {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            background: linear-gradient(145deg, #ffffff, #f0f7ff);
-            padding: 18px;
-            border-radius: 10px;
-            margin-top: 15px;
-            border: 1px solid #d6e4ff;
-            box-shadow: 0 4px 12px rgba(45, 125, 210, 0.08);
+            gap: 12px;
+            background-color: #eef5ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
         }
         
         .header-name {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
         }
         
         .info-item {
@@ -99,199 +114,154 @@
         }
         
         .info-item label {
-            font-weight: 700;
-            color: #1a5a96;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .info-item label i {
-            color: #2d7dd2;
-            font-size: 1rem;
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
         }
         
         .info-item input,
         .info-item select {
-            padding: 12px 15px;
-            border: 2px solid #d1ddec;
-            border-radius: 8px;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
             font-size: 16px !important;
             width: 100%;
-            height: 50px;
-            background-color: #ffffff;
-            transition: all 0.3s ease;
-            color: #2c3e50;
+            height: 48px;
         }
         
         input[type="date"] {
-            min-height: 50px;
+            min-height: 48px;
         }
         
         .controls {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin: 20px 0;
-            padding: 18px;
-            background: linear-gradient(145deg, #f8fbff, #e8f2ff);
-            border-radius: 12px;
-            border: 1px solid #d6e4ff;
+            gap: 10px;
+            margin: 15px 0;
+            padding: 12px;
+            background-color: #f0f7ff;
+            border-radius: 8px;
         }
         
         .btn-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
         }
         
         .btn {
-            padding: 16px 20px;
+            padding: 14px 15px;
             border: none;
-            border-radius: 10px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 15px;
+            font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             transition: all 0.3s;
             flex: 1;
-            min-width: 150px;
-            height: 56px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .btn:hover::after {
-            opacity: 1;
+            min-width: 140px;
+            height: 52px;
         }
         
         .btn i {
-            font-size: 20px;
+            font-size: 18px;
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #2d7dd2 0%, #1a5a96 100%);
+            background-color: #2c5aa0;
             color: white;
         }
         
         .btn-primary:hover {
-            background: linear-gradient(135deg, #1a5a96 0%, #134274 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(26, 90, 150, 0.3);
+            background-color: #1d3d75;
         }
         
         .btn-success {
-            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            background-color: #28a745;
             color: white;
         }
         
         .btn-success:hover {
-            background: linear-gradient(135deg, #1e7e34 0%, #155724 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(30, 126, 52, 0.3);
+            background-color: #1e7e34;
         }
         
         .btn-secondary {
-            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            background-color: #6c757d;
             color: white;
         }
         
         .btn-secondary:hover {
-            background: linear-gradient(135deg, #495057 0%, #343a40 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(108, 117, 125, 0.3);
+            background-color: #545b62;
         }
         
         .table-container {
             width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            margin: 20px 0;
-            border: 1px solid #e1e8f5;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
         
         table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
+            border-collapse: collapse;
             min-width: 600px;
         }
         
         th,
         td {
-            border: 1px solid #e1e8f5;
-            padding: 14px 10px;
+            border: 1px solid #ddd;
+            padding: 12px 8px;
             text-align: center;
             font-size: 14px;
-            min-width: 95px;
+            min-width: 90px;
         }
         
         th {
-            background: linear-gradient(to bottom, #2d7dd2, #1a5a96);
+            background-color: #2c5aa0;
             color: white;
-            font-weight: 700;
+            font-weight: bold;
             position: sticky;
             top: 0;
             z-index: 10;
-            font-size: 14px;
-            border-bottom: 2px solid #134274;
+            font-size: 13px;
         }
         
         tr:nth-child(even) {
-            background-color: #f9fbff;
+            background-color: #f9f9f9;
         }
         
         tr:hover {
             background-color: #f0f7ff;
-            transform: scale(1.002);
-            transition: transform 0.2s;
         }
         
         .unit-header {
-            background: linear-gradient(to right, #e8f2ff, #d6e4ff) !important;
-            font-weight: 800;
-            color: #1a5a96;
-            font-size: 16px;
-            padding: 18px 10px;
-            border-bottom: 2px solid #2d7dd2;
+            background-color: #e7f1ff !important;
+            font-weight: bold;
+            color: #1d3d75;
+            font-size: 15px;
+            padding: 15px 8px;
         }
         
         input[type="text"],
         input[type="number"],
         select {
             width: 100%;
-            padding: 13px 10px;
-            border: 2px solid #d1ddec;
-            border-radius: 8px;
+            padding: 12px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
             text-align: center;
             font-size: 16px !important;
-            height: 46px;
+            height: 44px;
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            background-color: #ffffff;
-            transition: all 0.3s ease;
         }
         
         .input-text {
@@ -309,50 +279,43 @@
         input:focus,
         select:focus,
         textarea:focus {
-            outline: none;
-            border-color: #2d7dd2;
-            box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.2);
-            transform: scale(1.02);
-            transition: all 0.2s;
+            outline: 2px solid #2c5aa0;
+            outline-offset: -1px;
+            border-color: #2c5aa0;
         }
         
         .section-title,
         .section-to,
         .section-tox {
-            background: linear-gradient(to right, #2d7dd2, #4a9ce9);
+            background-color: #1d3d75;
             color: white;
-            padding: 18px 15px;
-            margin: 25px 0 18px 0;
-            border-radius: 10px;
-            font-size: 17px;
+            padding: 15px 10px;
+            margin: 20px 0 15px 0;
+            border-radius: 5px;
+            font-size: 16px;
             text-align: center;
-            line-height: 1.5;
-            box-shadow: 0 4px 12px rgba(45, 125, 210, 0.2);
-            position: relative;
-            overflow: hidden;
+            line-height: 1.4;
         }
         
         .section-title i,
         .section-to i,
         .section-tox i {
-            margin-left: 10px;
-            font-size: 20px;
+            margin-left: 8px;
+            font-size: 18px;
         }
         
         .footer-section {
-            margin-top: 25px;
-            padding: 20px;
-            background: linear-gradient(145deg, #f8fbff, #e8f2ff);
-            border-radius: 12px;
-            border: 1px solid #d6e4ff;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f7ff;
+            border-radius: 8px;
         }
         
         .footer-row {
             display: flex;
             flex-direction: column;
-            gap: 18px;
-            margin-bottom: 18px;
+            gap: 15px;
+            margin-bottom: 15px;
         }
         
         .footer-col,
@@ -364,64 +327,46 @@
         .footer-col label,
         .footer-col1 label {
             display: block;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: #1a5a96;
-            font-size: 1.05rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .footer-col label i,
-        .footer-col1 label i {
-            color: #2d7dd2;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #1d3d75;
+            font-size: 1rem;
         }
         
         .notes {
-            margin-top: 20px;
+            margin-top: 15px;
         }
         
         textarea {
             width: 100%;
-            padding: 18px;
-            border: 2px solid #d1ddec;
-            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
             font-size: 16px !important;
-            height: 120px;
+            height: 100px;
             resize: vertical;
-            min-height: 120px;
-            line-height: 1.6;
-            background-color: #ffffff;
-            transition: all 0.3s ease;
-            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            min-height: 100px;
+            line-height: 1.5;
         }
         
         .time-slots {
             display: flex;
             justify-content: space-between;
-            background: linear-gradient(to right, #e8f2ff, #d6e4ff);
-            padding: 15px 10px;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            background-color: #e7f1ff;
+            padding: 12px 8px;
+            border-radius: 5px;
+            margin-bottom: 10px;
             flex-wrap: wrap;
-            gap: 8px;
-            border: 1px solid #c5d4f0;
+            gap: 5px;
         }
         
         .time-slot {
-            font-weight: 800;
-            color: #1a5a96;
-            font-size: 14px;
+            font-weight: bold;
+            color: #1d3d75;
+            font-size: 13px;
             text-align: center;
             flex: 1;
-            min-width: 65px;
-            padding: 8px 5px;
-            background-color: white;
-            border-radius: 8px;
-            border: 1px solid #d1ddec;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            min-width: 60px;
         }
         
         .text-input {
@@ -441,15 +386,15 @@
         
         @media (min-width: 768px) {
             body {
-                padding: 20px;
+                padding: 15px;
                 font-size: 16px;
             }
             .container {
-                padding: 25px;
-                border-radius: 20px;
+                padding: 20px;
+                border-radius: 10px;
             }
             h1 {
-                font-size: 2rem;
+                font-size: 1.7rem;
             }
             .header-info {
                 flex-direction: row;
@@ -457,7 +402,7 @@
             }
             .info-item {
                 flex: 1;
-                min-width: 220px;
+                min-width: 200px;
             }
             .header-name {
                 flex-direction: row;
@@ -466,15 +411,14 @@
             .controls {
                 flex-direction: row;
                 justify-content: space-between;
-                padding: 20px;
             }
             .btn-group {
                 flex-wrap: nowrap;
             }
             .btn {
-                min-width: 180px;
-                font-size: 17px;
-                height: 58px;
+                min-width: 170px;
+                font-size: 16px;
+                height: 54px;
             }
             .footer-row {
                 flex-direction: row;
@@ -483,115 +427,106 @@
             .footer-col,
             .footer-col1 {
                 flex: 1;
-                min-width: 220px;
+                min-width: 200px;
             }
             .time-slot {
-                font-size: 15px;
-                min-width: 70px;
+                font-size: 14px;
             }
             th,
             td {
-                padding: 16px 12px;
+                padding: 14px 10px;
                 font-size: 15px;
             }
             input[type="text"],
             input[type="number"],
             select {
-                font-size: 16px !important;
-                height: 48px;
+                font-size: 15px !important;
+                height: 42px;
             }
             textarea {
                 font-size: 16px !important;
-                height: 140px;
-                padding: 20px;
-            }
-            .section-title,
-            .section-to,
-            .section-tox {
-                font-size: 18px;
-                padding: 20px;
+                height: 120px;
             }
         }
         
         @media (min-width: 1024px) {
             body {
-                padding: 25px;
+                padding: 20px;
             }
             .container {
                 max-width: 1400px;
-                padding: 30px;
+                padding: 25px;
             }
             h1 {
-                font-size: 2.2rem;
+                font-size: 1.9rem;
             }
             .controls {
-                padding: 22px;
+                padding: 15px;
             }
             .btn {
-                padding: 18px 25px;
-                font-size: 18px;
-                height: 60px;
+                padding: 14px 25px;
+                font-size: 17px;
+                height: 56px;
             }
             .time-slots {
-                padding: 18px;
+                padding: 14px;
             }
             .time-slot {
-                font-size: 16px;
-                min-width: 75px;
+                font-size: 15px;
             }
             .section-title,
             .section-to,
             .section-tox {
-                font-size: 19px;
-                padding: 22px;
+                font-size: 18px;
+                padding: 18px;
             }
             textarea {
                 font-size: 16px !important;
-                height: 150px;
+                height: 130px;
             }
         }
         
         @media (max-width: 360px) {
             body {
-                padding: 10px;
+                padding: 8px;
                 font-size: 14px;
             }
             .container {
-                padding: 15px;
+                padding: 10px;
             }
             h1 {
-                font-size: 1.5rem;
+                font-size: 1.3rem;
             }
             .btn {
-                padding: 14px 10px;
-                font-size: 15px;
-                min-width: 140px;
-                height: 54px;
+                padding: 12px 8px;
+                font-size: 14px;
+                min-width: 130px;
+                height: 50px;
             }
             .btn i {
-                font-size: 18px;
+                font-size: 16px;
             }
             th,
             td {
-                padding: 12px 8px;
+                padding: 10px 6px;
                 font-size: 13px;
             }
             input[type="text"],
             input[type="number"],
             select {
-                font-size: 16px !important;
-                padding: 12px 8px;
-                height: 46px;
+                font-size: 15px !important;
+                padding: 10px 6px;
+                height: 42px;
             }
             .time-slot {
-                font-size: 13px;
-                min-width: 60px;
+                font-size: 12px;
+                min-width: 55px;
             }
             .section-title,
             .section-to,
             .section-tox {
-                font-size: 16px;
-                padding: 15px 10px;
+                font-size: 15px;
+                padding: 12px 8px;
             }
         }
         
@@ -603,7 +538,6 @@
             .container {
                 box-shadow: none;
                 padding: 10px;
-                border: 1px solid #ccc;
             }
             .controls,
             .btn {
@@ -611,42 +545,36 @@
             }
             .table-container {
                 overflow: visible;
-                border: 1px solid #ccc;
             }
             table {
                 min-width: 100%;
-                border: 1px solid #ccc;
             }
             input,
             textarea {
-                border: 1px solid #ccc !important;
+                border: none;
                 background: transparent;
-            }
-            .header-info,
-            .footer-section {
-                border: 1px solid #ccc;
             }
         }
         
         @media (hover: none) and (pointer: coarse) {
             .btn {
-                min-height: 56px;
-                padding: 18px 15px;
+                min-height: 52px;
+                padding: 16px 15px;
             }
             input,
             select,
             textarea {
                 font-size: 18px !important;
-                min-height: 52px;
+                min-height: 50px;
             }
             input[type="text"],
             input[type="number"] {
                 font-size: 18px !important;
-                height: 52px;
+                height: 50px;
             }
             .info-item input,
             .info-item select {
-                height: 54px;
+                height: 52px;
             }
         }
         
@@ -673,99 +601,42 @@
         html {
             scroll-behavior: smooth;
         }
-        /* تخصيص شريط التمرير */
         
-         ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
-        }
-        
-         ::-webkit-scrollbar-track {
-            background: #f1f5ff;
-            border-radius: 5px;
-        }
-        
-         ::-webkit-scrollbar-thumb {
-            background: #2d7dd2;
-            border-radius: 5px;
-        }
-        
-         ::-webkit-scrollbar-thumb:hover {
-            background: #1a5a96;
-        }
-        /* تحسينات للأجهزة التي تدعم اللمس */
-        
-        @media (hover: none) {
-            .btn:hover {
-                transform: none;
-            }
-            input:focus,
-            select:focus,
-            textarea:focus {
-                transform: none;
-            }
-        }
-        /* تأثيرات خاصة */
-        
-        .info-item input:valid,
-        .info-item select:valid {
-            border-color: #28a745;
-        }
-        
-        .info-item input:invalid:not(:placeholder-shown),
-        .info-item select:invalid:not(:placeholder-shown) {
-            border-color: #dc3545;
-        }
-        /* تحسينات للطباعة */
-        
-        @media print {
-            .btn,
-            .controls,
-            .time-slots {
-                display: none !important;
-            }
-            .container {
-                box-shadow: none;
-                border: 1px solid #000;
-            }
-            table {
-                page-break-inside: auto;
-            }
-            tr {
-                page-break-inside: avoid;
-                page-break-after: auto;
-            }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            transform: scale(1.02);
+            transition: transform 0.2s;
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <div class="container">
         <header>
             <h1>
-                <i class="fas fa-water"></i> سجل محطة نموذج 8 - نموذج إلكتروني
+                <i class="fas fa-water"></i> سجل محطة نموزج 8 - نموذج إلكتروني
             </h1>
-            <p style="color: #4a9ce9; font-weight: 500; margin-top: 5px;">نموذج الكتروني - مع إمكانية التصدير إلى Excel</p>
+            <p>نموذج الكتروني - مع إمكانية التصدير إلى Excel</p>
 
             <div class="header-info">
                 <div class="info-item">
-                    <label for="station-name"><i class="fas fa-industry"></i> اسم المحطة:</label>
-                    <input type="text" id="station-name" value="محطة الضخ الرئيسية" class="keyboard-text" placeholder="أدخل اسم المحطة" />
+                    <label for="station-name">اسم المحطة:</label>
+                    <input type="text" id="station-name" value="" class="keyboard-text" placeholder="أدخل اسم المحطة" />
                 </div>
                 <div class="header-name">
                     <div class="info-item">
-                        <label for="operator-name"><i class="fas fa-user"></i> اسم المشغل:</label>
+                        <label for="operator-name">اسم المشغل:</label>
                         <input type="text" id="operator-name" value="" class="keyboard-text" placeholder="أدخل اسم المشغل" />
                     </div>
 
                     <div class="info-item">
-                        <label for="record-date"><i class="fas fa-calendar-alt"></i> التاريخ:</label>
+                        <label for="record-date">التاريخ:</label>
                         <input type="date" id="record-date" value="" />
                     </div>
 
                     <div class="info-item">
-                        <label for="shift"><i class="fas fa-clock"></i> الوردية:</label>
+                        <label for="shift">الوردية:</label>
                         <select id="shift">
                             <option value="صباحية">صباحية</option>
                             <option value="مسائية">مسائية</option>
@@ -778,10 +649,10 @@
         <div class="controls">
             <div class="btn-group">
                 <button class="btn btn-primary" id="addRowBtn">
-                    <i class="fas fa-plus-circle"></i> إضافة وحدة
+                    <i class="fas fa-plus"></i> إضافة وحدة
                 </button>
                 <button class="btn btn-secondary" id="resetBtn">
-                    <i class="fas fa-redo-alt"></i> إعادة تعيين
+                    <i class="fas fa-redo"></i> إعادة تعيين
                 </button>
             </div>
 
@@ -832,34 +703,34 @@
         <div class="footer-section">
             <div class="footer-row">
                 <div class="footer-col">
-                    <label><i class="fas fa-water"></i> الطرق المائي:</label>
+                    <label>الطرق المائي:</label>
                     <input type="text" id="waterPath" class="keyboard-text" placeholder="أدخل حالة الطرق المائي (طبيعي / غير طبيعي)" />
                 </div>
 
                 <div class="footer-col">
-                    <label><i class="fas fa-tint"></i> مستوي المياه بالخزان الأول:</label>
+                    <label>مستوي المياه بالخزان الأول:</label>
                     <input type="text" id="tank1Level" class="keyboard-text" placeholder="أدخل المستوي (ممتلئ / متوسط / منخفض)" />
                 </div>
 
                 <div class="footer-col">
-                    <label><i class="fas fa-tint"></i> مستوي المياه بالخزان الثاني:</label>
+                    <label>مستوي المياه بالخزان الثاني:</label>
                     <input type="text" id="tank2Level" class="keyboard-text" placeholder="أدخل المستوي (ممتلئ / متوسط / منخفض)" />
                 </div>
             </div>
 
             <div class="footer-row">
                 <div class="footer-col">
-                    <label><i class="fas fa-tint"></i> مستوي المياه بالخزان الثالث:</label>
+                    <label>مستوي المياه بالخزان الثالث:</label>
                     <input type="text" id="tank3Level" class="keyboard-text" placeholder="أدخل المستوي (ممتلئ / متوسط / منخفض)" />
                 </div>
 
                 <div class="footer-col">
-                    <label><i class="fas fa-compress-arrows-alt"></i> مستوي الزيت بالضاغط الأول / درجة الحرارة:</label>
+                    <label>مستوي الزيت بالضاغط الأول / درجة الحرارة:</label>
                     <input type="text" id="compressor1" class="keyboard-text" placeholder="مثال: جيد / 45°C" />
                 </div>
 
                 <div class="footer-col">
-                    <label><i class="fas fa-compress-arrows-alt"></i> مستوي الزيت بالضاغط الثاني / درجة الحرارة:</label>
+                    <label>مستوي الزيت بالضاغط الثاني / درجة الحرارة:</label>
                     <input type="text" id="compressor2" class="keyboard-text" placeholder="مثال: جيد / 42°C" />
                 </div>
             </div>
@@ -869,58 +740,58 @@
             </div>
 
             <div class="footer-col1">
-                <label><i class="fas fa-oil-can"></i> مستوي الزيت بالضاغط / درجة الحرارة:</label>
+                <label>مستوي الزيت بالضاغط / درجة الحرارة:</label>
                 <input type="text" id="com" class="keyboard-text" placeholder="أدخل القراءة (مستوي زيت / درجة حرارة)" />
             </div>
 
             <div class="section-tox">
-                <i class="fas fa-clock"></i> مواعيد التشغيل \ الإيقاف للمحطة
+                <i class="fas fa-tachometer-alt"></i> مواعيد التشغيل \ الإيقاف للمحطة
             </div>
 
             <div class="footer-row">
                 <div class="footer-col">
-                    <label><i class="fas fa-play-circle"></i> توقيت تشغيل المحطة:</label>
+                    <label>توقيت تشغيل المحطة:</label>
                     <input type="time" id="startTime" value="06:00" />
                 </div>
 
                 <div class="footer-col">
-                    <label><i class="fas fa-stop-circle"></i> توقيت إيقاف المحطة:</label>
+                    <label>توقيت إيقاف المحطة:</label>
                     <input type="time" id="endTime" value="24:00" />
                 </div>
 
                 <div class="footer-col">
-                    <label><i class="fas fa-hourglass-half"></i> عدد ساعات تشغيل المحطة خلال اليوم:</label>
+                    <label>عدد ساعات تشغيل المحطة خلال اليوم:</label>
                     <input type="text" id="totalHours" class="keyboard-number" placeholder="أدخل عدد الساعات" />
                 </div>
             </div>
 
             <div class="notes">
-                <label for="dailyNotes" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                    <i class="fas fa-sticky-note"></i> ملاحظات اليوم:
-                </label>
+                <label for="dailyNotes">ملاحظات اليوم:</label>
                 <textarea id="dailyNotes" class="keyboard-text" placeholder="أدخل أي ملاحظات هامة عن تشغيل المحطة اليوم (مشاكل، إصلاحات، صيانة، ...)"></textarea>
             </div>
         </div>
 
         <div style="
             text-align: center;
-            margin-top: 30px;
-            color: #6c757d;
-            font-size: 15px;
-            padding: 15px;
-            border-top: 1px solid #e1e8f5;
-            background: #f8fbff;
-            border-radius: 10px;
+            margin-top: 25px;
+            color: #666;
+            font-size: 14px;
+            padding: 10px;
+            border-top: 1px solid #eee;
         ">
-            <p style="margin-bottom: 5px; font-weight: 600;">
-                <i class="fas fa-cogs"></i> تم إنشاء هذا النموذج بواسطة نموذج سجل محطة ضخ الإلكتروني
-            </p>
-            <p style="color: #2d7dd2; font-weight: 500;">
-                نسخة 2025 - مع نظام حفظ تلقائي متطور
+            <p>
+                تم إنشاء هذا النموذج بواسطة نموذج سجل محطة ضخ الإلكتروني - نسخة 2025
             </p>
         </div>
     </div>
-
+    <div class="sync-banner">
+        <i class="fas fa-sync"></i>
+        <span>رمز المزامنة (للدخول من أجهزة أخرى):</span>
+        <input type="text" id="sync-code" class="sync-input" placeholder="مثال: Station_101" />
+        <div id="sync-status" class="status-indicator"></div>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         // تعيين التاريخ الحالي افتراضياً
@@ -1617,6 +1488,138 @@
 
                 // حفظ الحالة الجديدة
                 setTimeout(silentSave, 1000);
+            }
+        });
+        // --- إعدادات Firebase (يجب عليك إنشاء مشروع على Firebase واستبدال القيم هنا) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCKbEAIcSnw70CqUflBVFuv7KUq1VMjgTA",
+            authDomain: "pump-station-system.firebaseapp.com",
+            projectId: "pump-station-system",
+            storageBucket: "pump-station-system.firebasestorage.app",
+            messagingSenderId: "734880960614",
+            appId: "1:734880960614:web:79039329fcfe3888181da7"
+        };
+
+        // بدء تشغيل Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // متغيرات التحكم
+        let syncRef = null;
+        let isUpdating = false;
+
+        // دوال المزامنة السحابية
+        document.getElementById('sync-code').addEventListener('change', function(e) {
+            const code = e.target.value.trim();
+            if (code) {
+                loadFromCloud(code);
+                localStorage.setItem('last_sync_code', code);
+            }
+        });
+
+        // حفظ البيانات في السحابة
+        function saveToCloud() {
+            const code = document.getElementById('sync-code').value.trim();
+            if (!code || isUpdating) return;
+
+            const statusEl = document.getElementById('sync-status');
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ سحابياً...';
+            statusEl.className = 'status-indicator syncing';
+
+            const data = {
+                station: document.getElementById('station-name').value,
+                operator: document.getElementById('operator-name').value,
+                date: document.getElementById('record-date').value,
+                shift: document.getElementById('shift').value,
+                inputs: {},
+                additional: {
+                    waterPath: document.getElementById('waterPath').value,
+                    tank1: document.getElementById('tank1Level').value,
+                    tank2: document.getElementById('tank2Level').value,
+                    tank3: document.getElementById('tank3Level').value,
+                    comp1: document.getElementById('compressor1').value,
+                    comp2: document.getElementById('compressor2').value,
+                    com: document.getElementById('com').value,
+                    start: document.getElementById('startTime').value,
+                    end: document.getElementById('endTime').value,
+                    notes: document.getElementById('dailyNotes').value
+                },
+                lastUpdated: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            document.querySelectorAll('.data-input').forEach(input => {
+                if (input.value) data.inputs[input.id] = input.value;
+            });
+
+            database.ref('stations/' + code).set(data).then(() => {
+                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> متصل ومزامن';
+                statusEl.className = 'status-indicator online';
+            });
+        }
+
+        // تحميل البيانات من السحابة (تحديث لحظي)
+        function loadFromCloud(code) {
+            if (syncRef) syncRef.off(); // إغلاق الاتصال القديم
+
+            syncRef = database.ref('stations/' + code);
+            syncRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && !isUpdating) {
+                    isUpdating = true; // منع حلقة تكرار الحفظ أثناء التحديث
+
+                    document.getElementById('station-name').value = data.station || '';
+                    document.getElementById('operator-name').value = data.operator || '';
+                    document.getElementById('record-date').value = data.date || '';
+                    document.getElementById('shift').value = data.shift || 'صباحية';
+
+                    if (data.inputs) {
+                        Object.entries(data.inputs).forEach(([id, value]) => {
+                            const el = document.getElementById(id);
+                            if (el) el.value = value;
+                        });
+                    }
+
+                    if (data.additional) {
+                        document.getElementById('waterPath').value = data.additional.waterPath || '';
+                        document.getElementById('tank1Level').value = data.additional.tank1 || '';
+                        document.getElementById('tank2Level').value = data.additional.tank2 || '';
+                        document.getElementById('tank3Level').value = data.additional.tank3 || '';
+                        document.getElementById('compressor1').value = data.additional.comp1 || '';
+                        document.getElementById('compressor2').value = data.additional.comp2 || '';
+                        document.getElementById('com').value = data.additional.com || '';
+                        document.getElementById('startTime').value = data.additional.start || '06:00';
+                        document.getElementById('endTime').value = data.additional.end || '24:00';
+                        document.getElementById('dailyNotes').value = data.additional.notes || '';
+                    }
+
+                    calculateTotalHours();
+                    isUpdating = false;
+                }
+            });
+        }
+
+        // تعديل دالة الحفظ التلقائي لتشمل السحابة
+        function setupAutoSave() {
+            let timer;
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    clearTimeout(timer);
+                    timer = setTimeout(saveToCloud, 2000); // حفظ بعد ثانيتين من التوقف عن الكتابة
+                });
+            });
+        }
+
+        // عند بدء الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            generateTable();
+            setupAutoSave();
+
+            // استعادة آخر رمز مزامنة تم استخدامه
+            const lastCode = localStorage.getItem('last_sync_code');
+            if (lastCode) {
+                document.getElementById('sync-code').value = lastCode;
+                loadFromCloud(lastCode);
             }
         });
     </script>
