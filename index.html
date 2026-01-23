@@ -794,6 +794,9 @@
                 <button class="btn btn-primary" id="printBtn">
                     <i class="fas fa-print"></i> طباعة
                 </button>
+                <button class="btn btn-success" id="manualSaveBtn">
+                    <i class="fas fa-cloud-upload-alt"></i> حفظ على السحابة
+                </button>
             </div>
         </div>
 
@@ -958,8 +961,10 @@
         try {
             firebase.initializeApp(firebaseConfig);
             database = firebase.database();
+            console.log("Firebase initialized successfully");
         } catch (e) {
             console.log("Firebase initialization error:", e);
+            alert("خطأ في الاتصال بالسحابة. تأكد من اتصال الإنترنت.");
         }
 
         // تعيين التاريخ الحالي افتراضياً
@@ -1204,9 +1209,7 @@
         function handleInputChange() {
             if (!isUpdating) {
                 saveToLocalStorage();
-                if (database) {
-                    saveToCloud();
-                }
+                // الحفظ التلقائي على السحابة متوقف مؤقتاً
             }
         }
 
@@ -1247,6 +1250,7 @@
 
             try {
                 localStorage.setItem('pump_station_data', JSON.stringify(data));
+                console.log("تم الحفظ محلياً");
             } catch (e) {
                 console.log("Local storage error:", e);
             }
@@ -1293,21 +1297,27 @@
             }
         }
 
-        // الحفظ في السحابة
+        // ===== دالة الحفظ على السحابة (المراجعة والمصححة) =====
         function saveToCloud() {
-            if (!database) return;
+            if (!database) {
+                alert("غير متصل بالسحابة. تأكد من اتصال الإنترنت.");
+                return false;
+            }
             
-            const code = document.getElementById('sync-code').value.trim();
-            if (!code || isUpdating) return;
+            const stationName = document.getElementById('station-name').value.trim();
+            if (!stationName) {
+                alert("يرجى إدخال اسم المحطة أولاً");
+                return false;
+            }
 
             const statusEl = document.getElementById('sync-status');
             if (statusEl) {
-                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ على السحابة...';
                 statusEl.className = 'status-indicator syncing';
             }
 
             const data = {
-                station: document.getElementById('station-name').value,
+                station: stationName,
                 operator: document.getElementById('operator-name').value,
                 date: document.getElementById('record-date').value,
                 shift: document.getElementById('shift').value,
@@ -1327,84 +1337,120 @@
                 lastUpdated: firebase.database.ServerValue.TIMESTAMP
             };
 
+            // جمع بيانات الجدول
             document.querySelectorAll('.data-input').forEach(input => {
-                if (input.value) data.inputs[input.id] = input.value;
+                if (input.value) {
+                    data.inputs[input.id] = input.value;
+                }
             });
 
-            database.ref('stations/' + code).set(data).then(() => {
-                if (statusEl) {
-                    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> تم الحفظ';
-                    statusEl.className = 'status-indicator online';
-                }
-            }).catch(error => {
-                console.log("Cloud save error:", error);
-                if (statusEl) {
-                    statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ في الحفظ';
-                }
-            });
+            // استخدام اسم المحطة كمفتاح (بدون تشفير)
+            const stationKey = stationName.replace(/\s+/g, '_');
+            
+            return database.ref('stations/' + stationKey).set(data)
+                .then(() => {
+                    if (statusEl) {
+                        statusEl.innerHTML = '<i class="fas fa-check-circle"></i> تم الحفظ بنجاح';
+                        statusEl.className = 'status-indicator online';
+                    }
+                    // تحديث حقل المزامنة
+                    document.getElementById('sync-code').value = stationName;
+                    // حفظ رمز المزامنة
+                    localStorage.setItem('last_sync_code', stationKey);
+                    console.log("تم الحفظ على السحابة للمحطة:", stationName);
+                    return true;
+                })
+                .catch(error => {
+                    console.log("Cloud save error:", error);
+                    if (statusEl) {
+                        statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ في الحفظ';
+                    }
+                    alert("حدث خطأ أثناء الحفظ على السحابة: " + error.message);
+                    return false;
+                });
         }
 
-        // تحميل من السحابة
+        // ===== دالة تحميل من السحابة (المراجعة والمصححة) =====
         function loadFromCloud(code) {
-            if (!database) return;
+            if (!database) {
+                alert("غير متصل بالسحابة. تأكد من اتصال الإنترنت.");
+                return;
+            }
             
             if (syncRef) syncRef.off();
 
             const statusEl = document.getElementById('sync-status');
             if (statusEl) {
-                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل...';
+                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل من السحابة...';
                 statusEl.className = 'status-indicator syncing';
             }
 
-            syncRef = database.ref('stations/' + code);
-            syncRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data && !isUpdating) {
-                    isUpdating = true;
+            // استخدام اسم المحطة كمفتاح (بدون تشفير)
+            const stationKey = code.replace(/\s+/g, '_');
+            
+            syncRef = database.ref('stations/' + stationKey);
+            syncRef.once('value')
+                .then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data && !isUpdating) {
+                        isUpdating = true;
 
-                    document.getElementById('station-name').value = data.station || '';
-                    document.getElementById('operator-name').value = data.operator || '';
-                    document.getElementById('record-date').value = data.date || '';
-                    document.getElementById('shift').value = data.shift || 'صباحية';
+                        document.getElementById('station-name').value = data.station || '';
+                        document.getElementById('operator-name').value = data.operator || '';
+                        document.getElementById('record-date').value = data.date || '';
+                        document.getElementById('shift').value = data.shift || 'صباحية';
 
-                    if (data.inputs) {
-                        Object.entries(data.inputs).forEach(([id, value]) => {
-                            const el = document.getElementById(id);
-                            if (el) el.value = value;
-                        });
+                        if (data.inputs) {
+                            Object.entries(data.inputs).forEach(([id, value]) => {
+                                const el = document.getElementById(id);
+                                if (el) el.value = value;
+                            });
+                        }
+
+                        if (data.additional) {
+                            document.getElementById('waterPath').value = data.additional.waterPath || '';
+                            document.getElementById('tank1Level').value = data.additional.tank1 || '';
+                            document.getElementById('tank2Level').value = data.additional.tank2 || '';
+                            document.getElementById('tank3Level').value = data.additional.tank3 || '';
+                            document.getElementById('compressor1').value = data.additional.comp1 || '';
+                            document.getElementById('compressor2').value = data.additional.comp2 || '';
+                            document.getElementById('com').value = data.additional.com || '';
+                            document.getElementById('startTime').value = data.additional.start || '06:00';
+                            document.getElementById('endTime').value = data.additional.end || '24:00';
+                            document.getElementById('dailyNotes').value = data.additional.notes || '';
+                        }
+
+                        calculateTotalHours();
+                        saveToLocalStorage();
+                        isUpdating = false;
+                        
+                        if (statusEl) {
+                            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> تم التحميل بنجاح';
+                            statusEl.className = 'status-indicator online';
+                        }
+                        console.log("تم تحميل البيانات من السحابة للمحطة:", code);
+                    } else {
+                        if (statusEl) {
+                            statusEl.innerHTML = '<i class="fas fa-info-circle"></i> لا توجد بيانات لهذه المحطة';
+                        }
+                        console.log("لا توجد بيانات للمحطة:", code);
                     }
-
-                    if (data.additional) {
-                        document.getElementById('waterPath').value = data.additional.waterPath || '';
-                        document.getElementById('tank1Level').value = data.additional.tank1 || '';
-                        document.getElementById('tank2Level').value = data.additional.tank2 || '';
-                        document.getElementById('tank3Level').value = data.additional.tank3 || '';
-                        document.getElementById('compressor1').value = data.additional.comp1 || '';
-                        document.getElementById('compressor2').value = data.additional.comp2 || '';
-                        document.getElementById('com').value = data.additional.com || '';
-                        document.getElementById('startTime').value = data.additional.start || '06:00';
-                        document.getElementById('endTime').value = data.additional.end || '24:00';
-                        document.getElementById('dailyNotes').value = data.additional.notes || '';
-                    }
-
-                    calculateTotalHours();
-                    saveToLocalStorage();
-                    isUpdating = false;
-                    
+                })
+                .catch(error => {
+                    console.error("Cloud load error:", error);
                     if (statusEl) {
-                        statusEl.innerHTML = '<i class="fas fa-check-circle"></i> تم التحميل';
-                        statusEl.className = 'status-indicator online';
+                        statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ في التحميل';
                     }
-                } else {
-                    if (statusEl) {
-                        statusEl.innerHTML = '<i class="fas fa-info-circle"></i> لا توجد بيانات سابقة';
-                    }
-                }
-            });
+                });
         }
 
-        // === نظام استعادة المحطات المتاحة ===
+        // ===== نظام استعادة المحطات المتاحة (المصحح) =====
         
+        // زر الحفظ اليدوي على السحابة
+        document.getElementById('manualSaveBtn').addEventListener('click', function() {
+            saveToCloud();
+        });
+
         // عرض قائمة المحطات
         document.getElementById('showStationsBtn').addEventListener('click', async function() {
             await loadAvailableStations();
@@ -1445,6 +1491,11 @@
                 return;
             }
 
+            if (!database) {
+                alert('غير متصل بالسحابة. تأكد من اتصال الإنترنت.');
+                return;
+            }
+
             try {
                 const snapshot = await database.ref('stations/' + selectedStationId).once('value');
                 const data = snapshot.val();
@@ -1453,14 +1504,38 @@
                     isUpdating = true;
                     
                     // تحديث حقل اسم المحطة
-                    document.getElementById('station-name').value = decodeURIComponent(selectedStationId);
-                    document.getElementById('sync-code').value = decodeURIComponent(selectedStationId);
+                    const stationName = data.station || selectedStationId.replace(/_/g, ' ');
+                    document.getElementById('station-name').value = stationName;
+                    document.getElementById('sync-code').value = stationName;
                     
                     // تحديث باقي البيانات
-                    fillUIWithStationData(data);
+                    document.getElementById('operator-name').value = data.operator || '';
+                    document.getElementById('record-date').value = data.date || '';
+                    document.getElementById('shift').value = data.shift || 'صباحية';
+
+                    if (data.inputs) {
+                        Object.entries(data.inputs).forEach(([id, value]) => {
+                            const el = document.getElementById(id);
+                            if (el) el.value = value;
+                        });
+                    }
+
+                    if (data.additional) {
+                        document.getElementById('waterPath').value = data.additional.waterPath || '';
+                        document.getElementById('tank1Level').value = data.additional.tank1 || '';
+                        document.getElementById('tank2Level').value = data.additional.tank2 || '';
+                        document.getElementById('tank3Level').value = data.additional.tank3 || '';
+                        document.getElementById('compressor1').value = data.additional.comp1 || '';
+                        document.getElementById('compressor2').value = data.additional.comp2 || '';
+                        document.getElementById('com').value = data.additional.com || '';
+                        document.getElementById('startTime').value = data.additional.start || '06:00';
+                        document.getElementById('endTime').value = data.additional.end || '24:00';
+                        document.getElementById('dailyNotes').value = data.additional.notes || '';
+                    }
                     
-                    // حفظ محلياً
+                    calculateTotalHours();
                     saveToLocalStorage();
+                    isUpdating = false;
                     
                     // إغلاق النافذة
                     document.getElementById('stationsModal').classList.remove('active');
@@ -1471,11 +1546,11 @@
                 }
             } catch (error) {
                 console.error('Error loading station:', error);
-                alert('حدث خطأ أثناء استعادة البيانات');
+                alert('حدث خطأ أثناء استعادة البيانات: ' + error.message);
             }
         });
 
-        // دالة تحميل المحطات المتاحة
+        // ===== دالة تحميل المحطات المتاحة (المصححة) =====
         async function loadAvailableStations() {
             if (!database) {
                 alert('غير متصل بالسحابة. تأكد من اتصال الإنترنت.');
@@ -1501,7 +1576,7 @@
                         if (data && data.station) {
                             allStations.push({
                                 id: id,
-                                name: data.station || decodeURIComponent(id),
+                                name: data.station,
                                 operator: data.operator || 'غير معروف',
                                 date: data.date || 'غير معروف',
                                 lastUpdated: data.lastUpdated || Date.now(),
@@ -1542,6 +1617,16 @@
                         
                         stationsList.appendChild(stationDiv);
                     });
+                    
+                    if (allStations.length === 0) {
+                        stationsList.innerHTML = `
+                            <div class="empty-stations">
+                                <i class="fas fa-inbox"></i>
+                                <h4>لا توجد محطات متاحة</h4>
+                                <p>لم يتم حفظ أي محطات على السحابة بعد</p>
+                            </div>
+                        `;
+                    }
                 } else {
                     stationsList.innerHTML = `
                         <div class="empty-stations">
@@ -1553,7 +1638,7 @@
                 }
                 
                 if (statusEl) {
-                    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> تم تحديث القائمة';
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> ${allStations.length} محطة متاحة`;
                     statusEl.className = 'status-indicator online';
                 }
             } catch (error) {
@@ -1570,39 +1655,6 @@
                     statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ في الاتصال';
                 }
             }
-        }
-
-        // دالة ملء البيانات من محطة محددة
-        function fillUIWithStationData(data) {
-            // تحديث البيانات الأساسية
-            document.getElementById('operator-name').value = data.operator || '';
-            document.getElementById('record-date').value = data.date || '';
-            document.getElementById('shift').value = data.shift || 'صباحية';
-            
-            // تحديث بيانات الجدول
-            if (data.inputs) {
-                Object.entries(data.inputs).forEach(([id, value]) => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = value;
-                });
-            }
-            
-            // تحديث البيانات الإضافية
-            if (data.additional) {
-                document.getElementById('waterPath').value = data.additional.waterPath || '';
-                document.getElementById('tank1Level').value = data.additional.tank1 || '';
-                document.getElementById('tank2Level').value = data.additional.tank2 || '';
-                document.getElementById('tank3Level').value = data.additional.tank3 || '';
-                document.getElementById('compressor1').value = data.additional.comp1 || '';
-                document.getElementById('compressor2').value = data.additional.comp2 || '';
-                document.getElementById('com').value = data.additional.com || '';
-                document.getElementById('startTime').value = data.additional.start || '06:00';
-                document.getElementById('endTime').value = data.additional.end || '24:00';
-                document.getElementById('dailyNotes').value = data.additional.notes || '';
-            }
-            
-            calculateTotalHours();
-            isUpdating = false;
         }
 
         // إضافة وحدة جديدة
@@ -1864,24 +1916,13 @@
         }
 
         // المزامنة عند تغيير رمز المزامنة
-        document.getElementById('sync-code').addEventListener('input', function(e) {
+        document.getElementById('sync-code').addEventListener('change', function(e) {
             const code = e.target.value.trim();
             if (code) {
                 loadFromCloud(code);
                 localStorage.setItem('last_sync_code', code);
             }
         });
-
-        // دالة للبحث عن التحديثات تلقائياً
-        function setupAutoRefresh() {
-            // تحديث قائمة المحطات كل 5 دقائق إذا كانت النافذة مفتوحة
-            setInterval(() => {
-                const modal = document.getElementById('stationsModal');
-                if (modal.classList.contains('active')) {
-                    loadAvailableStations();
-                }
-            }, 300000); // 5 دقائق
-        }
 
         // تحميل البيانات عند بدء الصفحة
         document.addEventListener('DOMContentLoaded', function() {
@@ -1892,12 +1933,12 @@
             // تحميل آخر رمز مزامنة
             const lastCode = localStorage.getItem('last_sync_code');
             if (lastCode) {
-                document.getElementById('sync-code').value = lastCode;
-                setTimeout(() => loadFromCloud(lastCode), 500);
+                // تحميل اسم المحطة من البيانات المحفوظة
+                document.getElementById('sync-code').value = lastCode.replace(/_/g, ' ');
+                setTimeout(() => {
+                    loadFromCloud(lastCode);
+                }, 1000);
             }
-
-            // بدء التحديث التلقائي
-            setTimeout(setupAutoRefresh, 5000);
 
             // تحسين تجربة اللمس للأجهزة المحمولة
             if ('ontouchstart' in window) {
@@ -1915,7 +1956,8 @@
         window.addEventListener('beforeunload', function() {
             const code = document.getElementById('sync-code').value.trim();
             if (code) {
-                localStorage.setItem('last_sync_code', code);
+                const stationKey = code.replace(/\s+/g, '_');
+                localStorage.setItem('last_sync_code', stationKey);
             }
         });
 
@@ -1930,6 +1972,15 @@
         document.getElementById('stationsModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 this.classList.remove('active');
+            }
+        });
+
+        // إضافة زر سريع للمزامنة في الهيدر
+        const stationNameInput = document.getElementById('station-name');
+        stationNameInput.addEventListener('change', function() {
+            if (this.value.trim() && database) {
+                // تحديث حقل المزامنة تلقائياً
+                document.getElementById('sync-code').value = this.value.trim();
             }
         });
     </script>
