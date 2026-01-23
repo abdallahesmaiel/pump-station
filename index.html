@@ -176,6 +176,59 @@
             background-color: #138496 !important;
         }
         
+        /* زر التحذير */
+        .btn-warning {
+            background-color: #ffc107 !important;
+            color: #212529 !important;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e0a800 !important;
+        }
+        
+        /* شاشة التحميل */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+        
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            color: #333;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #2c5aa0;
+        }
+        
+        .loading-message {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .loading-details {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
         * {
             box-sizing: border-box;
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -734,6 +787,20 @@
 
 <body>
     <div class="container">
+        <!-- شاشة التحميل -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-content">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <div class="loading-message" id="loadingMessage">جاري الحفظ...</div>
+                <div class="loading-details" id="loadingDetails">يرجى الانتظار</div>
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-secondary" id="cancelLoadingBtn">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
         <!-- بانر المزامنة -->
         <div class="sync-banner">
             <i class="fas fa-cloud"></i>
@@ -784,6 +851,9 @@
                 </button>
                 <button class="btn btn-stations" id="showStationsBtn">
                     <i class="fas fa-satellite-dish"></i> استعادة من محطة أخرى
+                </button>
+                <button class="btn btn-warning" id="diagnoseBtn">
+                    <i class="fas fa-stethoscope"></i> تشخيص المشاكل
                 </button>
             </div>
 
@@ -945,27 +1015,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script>
-        // 1. إعداد Firebase
+        // ===== إعداد Firebase مع فحص وتحسين =====
         const firebaseConfig = {
             apiKey: "AIzaSyCKbEAIcSnw70CqUflBVFuv7KUq1VMjgTA",
             authDomain: "pump-station-system.firebaseapp.com",
             projectId: "pump-station-system",
-            databaseURL: "https://pump-station-system-default-rtdb.firebaseio.com",
+            databaseURL: "https://pump-station-system-default-rtdb.firebaseio.com/",
             storageBucket: "pump-station-system.firebasestorage.app",
             messagingSenderId: "734880960614",
             appId: "1:734880960614:web:79039329fcfe3888181da7"
         };
-        
-        // تهيئة Firebase
-        let database;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            database = firebase.database();
-            console.log("Firebase initialized successfully");
-        } catch (e) {
-            console.log("Firebase initialization error:", e);
-            alert("خطأ في الاتصال بالسحابة. تأكد من اتصال الإنترنت.");
-        }
+
+        // متغيرات التحكم
+        let database = null;
+        let firebaseInitialized = false;
+        let lastSaveTime = 0;
+        const SAVE_COOLDOWN = 5000; // 5 ثواني بين كل حفظ
+        const SAVE_TIMEOUT = 30000; // 30 ثانية مهلة للحفظ
+        let allStations = [];
+        let selectedStationId = null;
+        let syncRef = null;
+        let isUpdating = false;
 
         // تعيين التاريخ الحالي افتراضياً
         document.getElementById("record-date").valueAsDate = new Date();
@@ -1115,13 +1185,512 @@
         // أوقات القراءة
         const timeSlots = ["6:00", "11:00", "16:00", "21:00", "2:00"];
 
-        // متغيرات التحكم
-        let isUpdating = false;
-        let syncRef = null;
-        let allStations = [];
-        let selectedStationId = null;
+        // ===== دوال المساعدة العامة =====
+        
+        // فحص اتصال الإنترنت
+        function checkInternetConnection() {
+            return navigator.onLine;
+        }
 
-        // إنشاء الجدول
+        // عرض شاشة التحميل
+        function showLoading(message, details = "") {
+            document.getElementById('loadingMessage').textContent = message;
+            document.getElementById('loadingDetails').textContent = details;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        // إخفاء شاشة التحميل
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        // إلغاء التحميل
+        document.getElementById('cancelLoadingBtn').addEventListener('click', function() {
+            hideLoading();
+        });
+
+        // تحويل الأرقام إلى العربية
+        function unitCountToArabic(num) {
+            const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+            if (num < 10) {
+                return arabicNumbers[num];
+            }
+            return num.toString();
+        }
+
+        // ===== تهيئة Firebase مع فحص متقدم =====
+        async function initializeFirebase() {
+            if (firebaseInitialized) return true;
+            
+            showLoading('جاري الاتصال بالسحابة', 'فحص اتصال Firebase...');
+            
+            try {
+                // فحص اتصال الإنترنت أولاً
+                if (!checkInternetConnection()) {
+                    throw new Error('لا يوجد اتصال بالإنترنت');
+                }
+                
+                // فحص تكوين Firebase
+                if (!firebaseConfig.apiKey || !firebaseConfig.databaseURL) {
+                    throw new Error('تكوين Firebase غير مكتمل');
+                }
+                
+                // تهيئة Firebase
+                const app = firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                
+                // اختبار الاتصال بمحاولة قراءة بسيطة
+                const testRef = database.ref('.info/connected');
+                return new Promise((resolve) => {
+                    testRef.on('value', (snapshot) => {
+                        if (snapshot.val() === true) {
+                            console.log('✅ Firebase متصل بنجاح');
+                            firebaseInitialized = true;
+                            hideLoading();
+                            resolve(true);
+                        } else {
+                            console.log('❌ Firebase غير متصل');
+                            hideLoading();
+                            resolve(false);
+                        }
+                        // إزالة المستمع بعد الاختبار
+                        testRef.off();
+                    });
+                    
+                    // وقت انتهاء الاختبار
+                    setTimeout(() => {
+                        testRef.off();
+                        hideLoading();
+                        resolve(false);
+                    }, 10000);
+                });
+                
+            } catch (error) {
+                console.error('❌ خطأ في تهيئة Firebase:', error);
+                hideLoading();
+                
+                // عرض رسالة خطأ مفصلة
+                let errorMessage = 'خطأ في الاتصال بالسحابة: ';
+                
+                if (error.message.includes('network')) {
+                    errorMessage += 'مشكلة في الشبكة';
+                } else if (error.message.includes('permission')) {
+                    errorMessage += 'مشكلة في الصلاحيات';
+                } else if (error.message.includes('quota')) {
+                    errorMessage += 'تجاوز الحد المسموح';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                alert(errorMessage);
+                return false;
+            }
+        }
+
+        // ===== ضغط البيانات قبل الحفظ =====
+        function compressDataBeforeSave(data) {
+            const compressed = JSON.parse(JSON.stringify(data));
+            
+            // إزالة الحقول الفارغة من inputs
+            const cleanInputs = {};
+            Object.entries(compressed.inputs).forEach(([key, value]) => {
+                if (value && value.toString().trim() !== '') {
+                    cleanInputs[key] = value;
+                }
+            });
+            compressed.inputs = cleanInputs;
+            
+            return compressed;
+        }
+
+        // ===== محاولة إعادة الاتصال التلقائي =====
+        const MAX_RETRIES = 3;
+
+        async function retrySaveWithBackoff() {
+            for (let i = 0; i < MAX_RETRIES; i++) {
+                try {
+                    const result = await saveToCloud();
+                    if (result) return true;
+                    
+                    // زيادة وقت الانتظار مع كل محاولة فاشلة
+                    const delay = Math.pow(2, i) * 1000;
+                    console.log(`⏳ إعادة المحاولة بعد ${delay/1000} ثواني...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    
+                } catch (error) {
+                    console.error(`❌ محاولة ${i+1} فاشلة:`, error);
+                }
+            }
+            return false;
+        }
+
+        // ===== دالة الحفظ المحسنة على السحابة =====
+        async function saveToCloud() {
+            const now = Date.now();
+            
+            // منع الحفظ المتكرر السريع
+            if (now - lastSaveTime < SAVE_COOLDOWN) {
+                const remaining = Math.ceil((SAVE_COOLDOWN - (now - lastSaveTime)) / 1000);
+                alert(`يرجى الانتظار ${remaining} ثواني قبل المحاولة مرة أخرى`);
+                return false;
+            }
+            
+            // التحقق من تهيئة Firebase
+            if (!firebaseInitialized) {
+                const initialized = await initializeFirebase();
+                if (!initialized) {
+                    alert('غير قادر على الاتصال بالسحابة. تأكد من اتصال الإنترنت.');
+                    return false;
+                }
+            }
+            
+            // التحقق من اتصال الإنترنت
+            if (!checkInternetConnection()) {
+                alert('لا يوجد اتصال بالإنترنت. تأكد من اتصالك بالشبكة.');
+                return false;
+            }
+            
+            const stationName = document.getElementById('station-name').value.trim();
+            if (!stationName) {
+                alert('⚠️ يرجى إدخال اسم المحطة أولاً');
+                document.getElementById('station-name').focus();
+                return false;
+            }
+            
+            // عرض شاشة التحميل
+            showLoading('جاري حفظ البيانات على السحابة', `المحطة: ${stationName}`);
+            
+            try {
+                const statusEl = document.getElementById('sync-status');
+                if (statusEl) {
+                    statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+                    statusEl.className = 'status-indicator syncing';
+                }
+                
+                // تجميع البيانات
+                const data = {
+                    station: stationName,
+                    operator: document.getElementById('operator-name').value || 'غير معروف',
+                    date: document.getElementById('record-date').value || new Date().toISOString().split('T')[0],
+                    shift: document.getElementById('shift').value || 'صباحية',
+                    inputs: {},
+                    additional: {
+                        waterPath: document.getElementById('waterPath').value || '',
+                        tank1: document.getElementById('tank1Level').value || '',
+                        tank2: document.getElementById('tank2Level').value || '',
+                        tank3: document.getElementById('tank3Level').value || '',
+                        comp1: document.getElementById('compressor1').value || '',
+                        comp2: document.getElementById('compressor2').value || '',
+                        com: document.getElementById('com').value || '',
+                        start: document.getElementById('startTime').value || '06:00',
+                        end: document.getElementById('endTime').value || '24:00',
+                        notes: document.getElementById('dailyNotes').value || ''
+                    },
+                    lastUpdated: firebase.database.ServerValue.TIMESTAMP,
+                    created: firebase.database.ServerValue.TIMESTAMP
+                };
+                
+                // جمع بيانات الجدول
+                let inputCount = 0;
+                document.querySelectorAll('.data-input').forEach(input => {
+                    if (input.value && input.value.trim() !== '') {
+                        data.inputs[input.id] = input.value.trim();
+                        inputCount++;
+                    }
+                });
+                
+                console.log(`📊 جاري حفظ ${inputCount} حقل من البيانات...`);
+                
+                // إنشاء مفتاح آمن للمحطة
+                const stationKey = stationName
+                    .replace(/[^\w\u0600-\u06FF\s]/g, '')
+                    .replace(/\s+/g, '_')
+                    .toLowerCase()
+                    .substring(0, 100);
+                
+                // ضغط البيانات قبل الحفظ
+                const compressedData = compressDataBeforeSave(data);
+                
+                // الحفظ على Firebase مع مهلة زمنية
+                const savePromise = database.ref('stations/' + stationKey).set(compressedData);
+                
+                // إضافة مهلة زمنية
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('انتهت مهلة الحفظ (30 ثانية)')), SAVE_TIMEOUT);
+                });
+                
+                // الانتظار للحفظ أو انتهاء المهلة
+                await Promise.race([savePromise, timeoutPromise]);
+                
+                // تحديث الوقت الأخير للحفظ
+                lastSaveTime = Date.now();
+                
+                // تحديث الواجهة
+                if (statusEl) {
+                    statusEl.innerHTML = `<i class="fas fa-check-circle"></i> تم الحفظ ${new Date().toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'})}`;
+                    statusEl.className = 'status-indicator online';
+                }
+                
+                // تحديث حقل المزامنة
+                document.getElementById('sync-code').value = stationName;
+                
+                // حفظ في localStorage للمتابعة
+                localStorage.setItem('last_station_key', stationKey);
+                localStorage.setItem('last_station_name', stationName);
+                localStorage.setItem('last_save_time', now.toString());
+                
+                // إخفاء شاشة التحميل
+                hideLoading();
+                
+                // عرض إشعار النجاح
+                setTimeout(() => {
+                    alert(`✅ تم حفظ بيانات المحطة "${stationName}" على السحابة بنجاح!\n\nتم حفظ ${inputCount} حقل من البيانات.`);
+                }, 500);
+                
+                console.log(`✅ تم الحفظ بنجاح للمحطة: ${stationName} (المفتاح: ${stationKey})`);
+                return true;
+                
+            } catch (error) {
+                console.error('❌ خطأ في الحفظ على السحابة:', error);
+                hideLoading();
+                
+                // عرض رسالة الخطأ المناسبة
+                let errorMessage = '❌ فشل في حفظ البيانات:\n';
+                
+                if (error.message.includes('انتهت مهلة')) {
+                    errorMessage += '• انتهت مهلة الاتصال\n';
+                    errorMessage += '• قد تكون الشبكة بطيئة\n';
+                    errorMessage += '• جرب مرة أخرى لاحقاً';
+                } else if (error.message.includes('permission')) {
+                    errorMessage += '• مشكلة في صلاحيات قاعدة البيانات\n';
+                    errorMessage += '• تأكد من قواعد الأمان في Firebase';
+                } else if (error.message.includes('quota') || error.message.includes('limit')) {
+                    errorMessage += '• تم تجاوز الحد المسموح\n';
+                    errorMessage += '• جرب مرة أخرى غداً';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                alert(errorMessage);
+                
+                // تحديث حالة السحابة
+                const statusEl = document.getElementById('sync-status');
+                if (statusEl) {
+                    statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> فشل الحفظ';
+                }
+                
+                return false;
+            }
+        }
+
+        // ===== دالة تحميل من السحابة =====
+        function loadFromCloud(code) {
+            if (!firebaseInitialized) {
+                alert("غير متصل بالسحابة. تأكد من اتصال الإنترنت.");
+                return;
+            }
+            
+            if (syncRef) syncRef.off();
+
+            const statusEl = document.getElementById('sync-status');
+            if (statusEl) {
+                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل من السحابة...';
+                statusEl.className = 'status-indicator syncing';
+            }
+
+            // استخدام اسم المحطة كمفتاح
+            const stationKey = code.replace(/\s+/g, '_');
+            
+            syncRef = database.ref('stations/' + stationKey);
+            syncRef.once('value')
+                .then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data && !isUpdating) {
+                        isUpdating = true;
+
+                        document.getElementById('station-name').value = data.station || '';
+                        document.getElementById('operator-name').value = data.operator || '';
+                        document.getElementById('record-date').value = data.date || '';
+                        document.getElementById('shift').value = data.shift || 'صباحية';
+
+                        if (data.inputs) {
+                            Object.entries(data.inputs).forEach(([id, value]) => {
+                                const el = document.getElementById(id);
+                                if (el) el.value = value;
+                            });
+                        }
+
+                        if (data.additional) {
+                            document.getElementById('waterPath').value = data.additional.waterPath || '';
+                            document.getElementById('tank1Level').value = data.additional.tank1 || '';
+                            document.getElementById('tank2Level').value = data.additional.tank2 || '';
+                            document.getElementById('tank3Level').value = data.additional.tank3 || '';
+                            document.getElementById('compressor1').value = data.additional.comp1 || '';
+                            document.getElementById('compressor2').value = data.additional.comp2 || '';
+                            document.getElementById('com').value = data.additional.com || '';
+                            document.getElementById('startTime').value = data.additional.start || '06:00';
+                            document.getElementById('endTime').value = data.additional.end || '24:00';
+                            document.getElementById('dailyNotes').value = data.additional.notes || '';
+                        }
+
+                        calculateTotalHours();
+                        saveToLocalStorage();
+                        isUpdating = false;
+                        
+                        if (statusEl) {
+                            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> تم التحميل بنجاح';
+                            statusEl.className = 'status-indicator online';
+                        }
+                        console.log("تم تحميل البيانات من السحابة للمحطة:", code);
+                    } else {
+                        if (statusEl) {
+                            statusEl.innerHTML = '<i class="fas fa-info-circle"></i> لا توجد بيانات لهذه المحطة';
+                        }
+                        console.log("لا توجد بيانات للمحطة:", code);
+                    }
+                })
+                .catch(error => {
+                    console.error("Cloud load error:", error);
+                    if (statusEl) {
+                        statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ في التحميل';
+                    }
+                });
+        }
+
+        // ===== دالة فحص قاعدة بيانات Firebase =====
+        async function checkFirebaseDatabase() {
+            try {
+                showLoading('جاري فحص قاعدة البيانات', 'التحقق من الإعدادات...');
+                
+                // فحص ما إذا كانت قاعدة البيانات موجودة ومتاحة
+                const testData = {
+                    test: 'connection_test',
+                    timestamp: new Date().toISOString()
+                };
+                
+                const testRef = database.ref('connection_test');
+                await testRef.set(testData);
+                await testRef.remove(); // تنظيف بعد الاختبار
+                
+                hideLoading();
+                console.log('✅ قاعدة البيانات متاحة ومتجاوبة');
+                return true;
+                
+            } catch (error) {
+                hideLoading();
+                console.error('❌ مشكلة في قاعدة البيانات:', error);
+                
+                let solutions = '\n\n🛠 الحلول المقترحة:\n';
+                solutions += '1. تأكد من تفعيل Realtime Database في Firebase Console\n';
+                solutions += '2. تحقق من قواعد الأمان (يجب أن تكون مفتوحة للقراءة/الكتابة)\n';
+                solutions += '3. تأكد من وجود اتصال بالإنترنت\n';
+                solutions += '4. جرب تحديث الصفحة\n';
+                
+                alert('مشكلة في قاعدة البيانات' + solutions);
+                return false;
+            }
+        }
+
+        // ===== اختبار سريع عند تحميل الصفحة =====
+        async function quickFirebaseTest() {
+            try {
+                console.log('🔍 بدء اختبار Firebase السريع...');
+                
+                // اختبار بسيط بدون واجهة
+                const testRef = database.ref('test_connection');
+                const testPromise = testRef.set({ test: Date.now() });
+                
+                // مهلة قصيرة للاختبار
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('انتهت مهلة الاختبار')), 5000);
+                });
+                
+                await Promise.race([testPromise, timeoutPromise]);
+                await testRef.remove(); // تنظيف
+                
+                console.log('✅ اختبار Firebase ناجح');
+                return true;
+                
+            } catch (error) {
+                console.error('❌ اختبار Firebase فاشل:', error);
+                return false;
+            }
+        }
+
+        // ===== دالة التشخيص =====
+        document.getElementById('diagnoseBtn').addEventListener('click', async function() {
+            let report = '📋 تقرير تشخيص النظام:\n\n';
+            
+            // 1. فحص اتصال الإنترنت
+            report += '1. اتصال الإنترنت: ';
+            report += navigator.onLine ? '✅ متصل\n' : '❌ غير متصل\n';
+            
+            // 2. فحص Firebase
+            report += '2. حالة Firebase: ';
+            if (!firebaseInitialized) {
+                report += '❌ غير مهيأ\n';
+            } else {
+                report += '✅ مهيأ\n';
+            }
+            
+            // 3. فحص البيانات
+            const stationName = document.getElementById('station-name').value.trim();
+            report += `3. اسم المحطة: ${stationName || '❌ غير محدد'}\n`;
+            
+            // 4. فحص localStorage
+            report += '4. التخزين المحلي: ';
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                report += '✅ يعمل\n';
+            } catch (e) {
+                report += '❌ مشكلة\n';
+            }
+            
+            // 5. فحص Firebase Realtime Database
+            if (firebaseInitialized && database) {
+                report += '5. اتصال قاعدة البيانات: جاري الاختبار...\n';
+                
+                try {
+                    const testRef = database.ref('diagnostic_test');
+                    await testRef.set({ timestamp: Date.now() });
+                    const snapshot = await testRef.once('value');
+                    await testRef.remove();
+                    
+                    if (snapshot.exists()) {
+                        report = report.replace('جاري الاختبار...', '✅ يعمل\n');
+                    } else {
+                        report = report.replace('جاري الاختبار...', '❌ مشكلة\n');
+                    }
+                } catch (error) {
+                    report = report.replace('جاري الاختبار...', `❌ خطأ: ${error.message}\n`);
+                }
+            }
+            
+            // 6. فحص حجم البيانات
+            let dataSize = 0;
+            const inputs = document.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                if (input.value) dataSize += input.value.length;
+            });
+            report += `6. حجم البيانات: ${dataSize} حرف\n`;
+            
+            // 7. آخر حفظ ناجح
+            const lastStationKey = localStorage.getItem('last_station_key');
+            report += `7. آخر محطة محفوظة: ${lastStationKey || '❌ لا يوجد'}\n`;
+            
+            // 8. آخر وقت حفظ
+            const lastSaveTime = localStorage.getItem('last_save_time');
+            if (lastSaveTime) {
+                const date = new Date(parseInt(lastSaveTime));
+                report += `8. آخر حفظ: ${date.toLocaleString('ar-SA')}\n`;
+            }
+            
+            // عرض التقرير
+            alert(report + '\n🛠 لحل المشاكل:\n1. تأكد من اتصال الإنترنت\n2. جرب تحديث الصفحة\n3. تأكد من اسم المحطة\n4. تحقق من قواعد Firebase الأمان');
+        });
+
+        // ===== إنشاء الجدول =====
         const tableBody = document.getElementById("tableBody");
 
         function generateTable() {
@@ -1209,17 +1778,7 @@
         function handleInputChange() {
             if (!isUpdating) {
                 saveToLocalStorage();
-                // الحفظ التلقائي على السحابة متوقف مؤقتاً
             }
-        }
-
-        // تحويل الأرقام إلى العربية
-        function unitCountToArabic(num) {
-            const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
-            if (num < 10) {
-                return arabicNumbers[num];
-            }
-            return num.toString();
         }
 
         // الحفظ في localStorage
@@ -1297,160 +1856,8 @@
             }
         }
 
-        // ===== دالة الحفظ على السحابة (المراجعة والمصححة) =====
-        function saveToCloud() {
-            if (!database) {
-                alert("غير متصل بالسحابة. تأكد من اتصال الإنترنت.");
-                return false;
-            }
-            
-            const stationName = document.getElementById('station-name').value.trim();
-            if (!stationName) {
-                alert("يرجى إدخال اسم المحطة أولاً");
-                return false;
-            }
-
-            const statusEl = document.getElementById('sync-status');
-            if (statusEl) {
-                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ على السحابة...';
-                statusEl.className = 'status-indicator syncing';
-            }
-
-            const data = {
-                station: stationName,
-                operator: document.getElementById('operator-name').value,
-                date: document.getElementById('record-date').value,
-                shift: document.getElementById('shift').value,
-                inputs: {},
-                additional: {
-                    waterPath: document.getElementById('waterPath').value,
-                    tank1: document.getElementById('tank1Level').value,
-                    tank2: document.getElementById('tank2Level').value,
-                    tank3: document.getElementById('tank3Level').value,
-                    comp1: document.getElementById('compressor1').value,
-                    comp2: document.getElementById('compressor2').value,
-                    com: document.getElementById('com').value,
-                    start: document.getElementById('startTime').value,
-                    end: document.getElementById('endTime').value,
-                    notes: document.getElementById('dailyNotes').value
-                },
-                lastUpdated: firebase.database.ServerValue.TIMESTAMP
-            };
-
-            // جمع بيانات الجدول
-            document.querySelectorAll('.data-input').forEach(input => {
-                if (input.value) {
-                    data.inputs[input.id] = input.value;
-                }
-            });
-
-            // استخدام اسم المحطة كمفتاح (بدون تشفير)
-            const stationKey = stationName.replace(/\s+/g, '_');
-            
-            return database.ref('stations/' + stationKey).set(data)
-                .then(() => {
-                    if (statusEl) {
-                        statusEl.innerHTML = '<i class="fas fa-check-circle"></i> تم الحفظ بنجاح';
-                        statusEl.className = 'status-indicator online';
-                    }
-                    // تحديث حقل المزامنة
-                    document.getElementById('sync-code').value = stationName;
-                    // حفظ رمز المزامنة
-                    localStorage.setItem('last_sync_code', stationKey);
-                    console.log("تم الحفظ على السحابة للمحطة:", stationName);
-                    return true;
-                })
-                .catch(error => {
-                    console.log("Cloud save error:", error);
-                    if (statusEl) {
-                        statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ في الحفظ';
-                    }
-                    alert("حدث خطأ أثناء الحفظ على السحابة: " + error.message);
-                    return false;
-                });
-        }
-
-        // ===== دالة تحميل من السحابة (المراجعة والمصححة) =====
-        function loadFromCloud(code) {
-            if (!database) {
-                alert("غير متصل بالسحابة. تأكد من اتصال الإنترنت.");
-                return;
-            }
-            
-            if (syncRef) syncRef.off();
-
-            const statusEl = document.getElementById('sync-status');
-            if (statusEl) {
-                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل من السحابة...';
-                statusEl.className = 'status-indicator syncing';
-            }
-
-            // استخدام اسم المحطة كمفتاح (بدون تشفير)
-            const stationKey = code.replace(/\s+/g, '_');
-            
-            syncRef = database.ref('stations/' + stationKey);
-            syncRef.once('value')
-                .then((snapshot) => {
-                    const data = snapshot.val();
-                    if (data && !isUpdating) {
-                        isUpdating = true;
-
-                        document.getElementById('station-name').value = data.station || '';
-                        document.getElementById('operator-name').value = data.operator || '';
-                        document.getElementById('record-date').value = data.date || '';
-                        document.getElementById('shift').value = data.shift || 'صباحية';
-
-                        if (data.inputs) {
-                            Object.entries(data.inputs).forEach(([id, value]) => {
-                                const el = document.getElementById(id);
-                                if (el) el.value = value;
-                            });
-                        }
-
-                        if (data.additional) {
-                            document.getElementById('waterPath').value = data.additional.waterPath || '';
-                            document.getElementById('tank1Level').value = data.additional.tank1 || '';
-                            document.getElementById('tank2Level').value = data.additional.tank2 || '';
-                            document.getElementById('tank3Level').value = data.additional.tank3 || '';
-                            document.getElementById('compressor1').value = data.additional.comp1 || '';
-                            document.getElementById('compressor2').value = data.additional.comp2 || '';
-                            document.getElementById('com').value = data.additional.com || '';
-                            document.getElementById('startTime').value = data.additional.start || '06:00';
-                            document.getElementById('endTime').value = data.additional.end || '24:00';
-                            document.getElementById('dailyNotes').value = data.additional.notes || '';
-                        }
-
-                        calculateTotalHours();
-                        saveToLocalStorage();
-                        isUpdating = false;
-                        
-                        if (statusEl) {
-                            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> تم التحميل بنجاح';
-                            statusEl.className = 'status-indicator online';
-                        }
-                        console.log("تم تحميل البيانات من السحابة للمحطة:", code);
-                    } else {
-                        if (statusEl) {
-                            statusEl.innerHTML = '<i class="fas fa-info-circle"></i> لا توجد بيانات لهذه المحطة';
-                        }
-                        console.log("لا توجد بيانات للمحطة:", code);
-                    }
-                })
-                .catch(error => {
-                    console.error("Cloud load error:", error);
-                    if (statusEl) {
-                        statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ في التحميل';
-                    }
-                });
-        }
-
-        // ===== نظام استعادة المحطات المتاحة (المصحح) =====
+        // ===== نظام استعادة المحطات المتاحة =====
         
-        // زر الحفظ اليدوي على السحابة
-        document.getElementById('manualSaveBtn').addEventListener('click', function() {
-            saveToCloud();
-        });
-
         // عرض قائمة المحطات
         document.getElementById('showStationsBtn').addEventListener('click', async function() {
             await loadAvailableStations();
@@ -1469,12 +1876,10 @@
         document.getElementById('stationsList').addEventListener('click', function(e) {
             const stationItem = e.target.closest('.station-item');
             if (stationItem) {
-                // إزالة التحديد السابق
                 document.querySelectorAll('.station-item').forEach(item => {
                     item.classList.remove('active');
                 });
                 
-                // تحديد المحطة الجديدة
                 stationItem.classList.add('active');
                 selectedStationId = stationItem.dataset.id;
             }
@@ -1491,7 +1896,7 @@
                 return;
             }
 
-            if (!database) {
+            if (!firebaseInitialized) {
                 alert('غير متصل بالسحابة. تأكد من اتصال الإنترنت.');
                 return;
             }
@@ -1503,12 +1908,10 @@
                 if (data) {
                     isUpdating = true;
                     
-                    // تحديث حقل اسم المحطة
                     const stationName = data.station || selectedStationId.replace(/_/g, ' ');
                     document.getElementById('station-name').value = stationName;
                     document.getElementById('sync-code').value = stationName;
                     
-                    // تحديث باقي البيانات
                     document.getElementById('operator-name').value = data.operator || '';
                     document.getElementById('record-date').value = data.date || '';
                     document.getElementById('shift').value = data.shift || 'صباحية';
@@ -1537,7 +1940,6 @@
                     saveToLocalStorage();
                     isUpdating = false;
                     
-                    // إغلاق النافذة
                     document.getElementById('stationsModal').classList.remove('active');
                     
                     alert('تم استعادة بيانات المحطة بنجاح');
@@ -1550,18 +1952,17 @@
             }
         });
 
-        // ===== دالة تحميل المحطات المتاحة (المصححة) =====
+        // دالة تحميل المحطات المتاحة
         async function loadAvailableStations() {
-            if (!database) {
-                alert('غير متصل بالسحابة. تأكد من اتصال الإنترنت.');
-                return;
+            if (!firebaseInitialized) {
+                const initialized = await initializeFirebase();
+                if (!initialized) {
+                    alert('غير قادر على الاتصال بالسحابة');
+                    return;
+                }
             }
 
-            const statusEl = document.getElementById('sync-status');
-            if (statusEl) {
-                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري جلب المحطات...';
-                statusEl.className = 'status-indicator syncing';
-            }
+            showLoading('جاري جلب المحطات', 'الرجاء الانتظار...');
 
             try {
                 const snapshot = await database.ref('stations').once('value');
@@ -1571,7 +1972,6 @@
                 allStations = [];
                 
                 if (stations) {
-                    // تحويل البيانات إلى مصفوفة
                     Object.entries(stations).forEach(([id, data]) => {
                         if (data && data.station) {
                             allStations.push({
@@ -1585,10 +1985,8 @@
                         }
                     });
                     
-                    // ترتيب المحطات حسب آخر تحديث (الأحدث أولاً)
                     allStations.sort((a, b) => b.lastUpdated - a.lastUpdated);
                     
-                    // عرض المحطات
                     stationsList.innerHTML = '';
                     allStations.forEach(station => {
                         const stationDiv = document.createElement('div');
@@ -1637,12 +2035,18 @@
                     `;
                 }
                 
+                hideLoading();
+                
+                const statusEl = document.getElementById('sync-status');
                 if (statusEl) {
                     statusEl.innerHTML = `<i class="fas fa-check-circle"></i> ${allStations.length} محطة متاحة`;
                     statusEl.className = 'status-indicator online';
                 }
             } catch (error) {
                 console.error('Error loading stations:', error);
+                hideLoading();
+                
+                const stationsList = document.getElementById('stationsList');
                 stationsList.innerHTML = `
                     <div class="empty-stations">
                         <i class="fas fa-exclamation-triangle"></i>
@@ -1651,11 +2055,38 @@
                     </div>
                 `;
                 
+                const statusEl = document.getElementById('sync-status');
                 if (statusEl) {
                     statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ في الاتصال';
                 }
             }
         }
+
+        // ===== تحسين زر الحفظ اليدوي =====
+        document.getElementById('manualSaveBtn').addEventListener('click', async function() {
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            this.disabled = true;
+            
+            try {
+                const result = await saveToCloud();
+                
+                if (result) {
+                    this.classList.add('btn-success');
+                    setTimeout(() => {
+                        this.classList.remove('btn-success');
+                    }, 2000);
+                }
+                
+            } finally {
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+                }, 1000);
+            }
+        });
+
+        // ===== دوال إضافية =====
 
         // إضافة وحدة جديدة
         document.getElementById("addRowBtn").addEventListener("click", function() {
@@ -1746,7 +2177,6 @@
         // إعادة تعيين النموذج
         document.getElementById("resetBtn").addEventListener("click", function() {
             if (confirm("هل تريد إعادة تعيين جميع البيانات؟")) {
-                // حفظ نسخة احتياطية
                 try {
                     const currentData = localStorage.getItem('pump_station_data');
                     if (currentData) {
@@ -1924,23 +2354,48 @@
             }
         });
 
-        // تحميل البيانات عند بدء الصفحة
-        document.addEventListener('DOMContentLoaded', function() {
+        // ===== التحميل الأولي للصفحة =====
+        document.addEventListener('DOMContentLoaded', async function() {
             generateTable();
             loadFromLocalStorage();
             calculateTotalHours();
-
-            // تحميل آخر رمز مزامنة
-            const lastCode = localStorage.getItem('last_sync_code');
-            if (lastCode) {
-                // تحميل اسم المحطة من البيانات المحفوظة
-                document.getElementById('sync-code').value = lastCode.replace(/_/g, ' ');
-                setTimeout(() => {
-                    loadFromCloud(lastCode);
-                }, 1000);
-            }
-
-            // تحسين تجربة اللمس للأجهزة المحمولة
+            
+            // محاولة تهيئة Firebase بشكل غير متزامن
+            setTimeout(async () => {
+                try {
+                    const app = firebase.initializeApp(firebaseConfig);
+                    database = firebase.database();
+                    
+                    const testResult = await quickFirebaseTest();
+                    
+                    if (testResult) {
+                        firebaseInitialized = true;
+                        console.log('✅ Firebase جاهز للاستخدام');
+                        
+                        const statusEl = document.getElementById('sync-status');
+                        if (statusEl) {
+                            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> متصل بالسحابة';
+                            statusEl.className = 'status-indicator online';
+                        }
+                        
+                        const lastStationKey = localStorage.getItem('last_station_key');
+                        const lastStationName = localStorage.getItem('last_station_name');
+                        
+                        if (lastStationName) {
+                            document.getElementById('sync-code').value = lastStationName;
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.warn('⚠️ Firebase غير متاح:', error);
+                    const statusEl = document.getElementById('sync-status');
+                    if (statusEl) {
+                        statusEl.innerHTML = '<i class="fas fa-cloud-slash"></i> غير متصل';
+                    }
+                }
+            }, 1000);
+            
+            // تحسين تجربة اللمس
             if ('ontouchstart' in window) {
                 document.querySelectorAll('input, textarea').forEach(input => {
                     input.addEventListener('focus', function() {
@@ -1975,11 +2430,10 @@
             }
         });
 
-        // إضافة زر سريع للمزامنة في الهيدر
+        // تحديث حقل المزامنة تلقائياً عند تغيير اسم المحطة
         const stationNameInput = document.getElementById('station-name');
         stationNameInput.addEventListener('change', function() {
-            if (this.value.trim() && database) {
-                // تحديث حقل المزامنة تلقائياً
+            if (this.value.trim() && firebaseInitialized) {
                 document.getElementById('sync-code').value = this.value.trim();
             }
         });
