@@ -1013,22 +1013,32 @@
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyCKbEAIcSnw70CqUflBVFuv7KUq1VMjgTA",
+    authDomain: "pump-station-system.firebaseapp.com",
+    projectId: "pump-station-system",
+    storageBucket: "pump-station-system.firebasestorage.app",
+    messagingSenderId: "734880960614",
+    appId: "1:734880960614:web:79039329fcfe3888181da7",
+    measurementId: "G-GTC8DJLKF5"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
     <script>
         // ===== إعداد Firebase مع فحص وتحسين =====
-       // Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyCKbEAIcSnw70CqUflBVFuv7KUq1VMjgTA",
-  authDomain: "pump-station-system.firebaseapp.com",
-  projectId: "pump-station-system",
-  storageBucket: "pump-station-system.firebasestorage.app",
-  messagingSenderId: "734880960614",
-  appId: "1:734880960614:web:79039329fcfe3888181da7"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
+      
         // متغيرات التحكم
         let database = null;
         let firebaseInitialized = false;
@@ -2443,4 +2453,5 @@ const app = initializeApp(firebaseConfig);
     </script>
 </body>
 </html>
+
 
