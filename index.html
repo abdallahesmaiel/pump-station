@@ -1016,15 +1016,18 @@
 
     <script>
         // ===== إعداد Firebase مع فحص وتحسين =====
-        const firebaseConfig = {
-            apiKey: "AIzaSyCKbEAIcSnw70CqUflBVFuv7KUq1VMjgTA",
-            authDomain: "pump-station-system.firebaseapp.com",
-            projectId: "pump-station-system",
-            databaseURL: "https://pump-station-system-default-rtdb.firebaseio.com/",
-            storageBucket: "pump-station-system.firebasestorage.app",
-            messagingSenderId: "734880960614",
-            appId: "1:734880960614:web:79039329fcfe3888181da7"
-        };
+       // Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCKbEAIcSnw70CqUflBVFuv7KUq1VMjgTA",
+  authDomain: "pump-station-system.firebaseapp.com",
+  projectId: "pump-station-system",
+  storageBucket: "pump-station-system.firebasestorage.app",
+  messagingSenderId: "734880960614",
+  appId: "1:734880960614:web:79039329fcfe3888181da7"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 
         // متغيرات التحكم
         let database = null;
@@ -2440,3 +2443,4 @@
     </script>
 </body>
 </html>
+
