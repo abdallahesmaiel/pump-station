@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         /* تحسينات إضافية للتصميم */
-        
         .sync-banner {
             background: #2c5aa0;
             color: white;
@@ -52,157 +51,141 @@
             color: #ffc107;
         }
         
-        .warning {
-            color: #fd7e14;
-        }
-        
-        /* نافذة اختيار المحطات */
-        .stations-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .stations-modal.active {
-            display: flex;
-        }
-        
-        .stations-content {
-            background: white;
-            width: 100%;
-            max-width: 600px;
-            max-height: 80vh;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        .stations-header {
-            background: #2c5aa0;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .stations-header h3 {
-            margin: 0;
-            font-size: 1.2rem;
-        }
-        
-        .stations-header .close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 5px;
-        }
-        
-        .stations-list {
-            padding: 20px;
-            max-height: 60vh;
-            overflow-y: auto;
-        }
-        
-        .station-item {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
+        /* نظام الكروت */
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
             padding: 15px;
-            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .station-card {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
         
-        .station-item:hover {
-            background: #e9ecef;
-            transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .station-item.active {
+        .station-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             border-color: #2c5aa0;
-            background: #eef5ff;
         }
         
-        .station-active {
-            background: #d4edda !important;
-            border-color: #c3e6cb !important;
+        .station-card.active {
+            border-color: #2c5aa0;
+            background: linear-gradient(135deg, #eef5ff 0%, #ffffff 100%);
+            box-shadow: 0 5px 20px rgba(44, 90, 160, 0.2);
+        }
+        
+        .station-card.has-data {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);
+        }
+        
+        .station-card.active.has-data {
+            border-color: #198754;
+            background: linear-gradient(135deg, #d1f0db 0%, #ffffff 100%);
+        }
+        
+        .station-icon {
+            font-size: 2rem;
+            color: #2c5aa0;
+            margin-bottom: 10px;
+        }
+        
+        .station-card.active .station-icon {
+            color: #1d3d75;
+        }
+        
+        .station-card.has-data .station-icon {
+            color: #28a745;
         }
         
         .station-name {
             font-weight: bold;
+            font-size: 1.2rem;
             color: #2c5aa0;
             margin-bottom: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        }
+        
+        .station-card.active .station-name {
+            color: #1d3d75;
         }
         
         .station-info {
-            font-size: 0.9rem;
-            color: #666;
-            display: flex;
-            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #6c757d;
             margin-bottom: 5px;
         }
         
-        .station-time {
-            font-size: 0.85rem;
-            color: #888;
-            direction: ltr;
-            text-align: left;
+        .station-status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #dc3545;
         }
         
-        .station-badge {
+        .station-status.online {
+            background: #28a745;
+        }
+        
+        .station-status.syncing {
+            background: #ffc107;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .data-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
             background: #28a745;
             color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            display: none;
         }
         
-        .stations-footer {
-            padding: 15px 20px;
-            background: #f8f9fa;
-            border-top: 1px solid #dee2e6;
-            text-align: center;
+        .station-card.has-data .data-indicator {
+            display: block;
         }
         
-        .stations-footer .btn {
-            margin: 0 5px;
+        /* زر التنبيه */
+        .alert-btn {
+            background: linear-gradient(135deg, #fd7e14 0%, #e36209 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
         }
         
-        .empty-stations {
-            text-align: center;
-            padding: 40px 20px;
-            color: #6c757d;
-        }
-        
-        .empty-stations i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            color: #adb5bd;
-        }
-        
-        /* زر عرض المحطات */
-        .btn-stations {
-            background-color: #17a2b8 !important;
-            color: white !important;
-        }
-        
-        .btn-stations:hover {
-            background-color: #138496 !important;
+        .alert-btn:hover {
+            background: linear-gradient(135deg, #e36209 0%, #c55200 100%);
+            transform: translateY(-2px);
         }
         
         * {
@@ -591,6 +574,9 @@
                 font-size: 16px;
                 height: 54px;
             }
+            .cards-container {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            }
             .footer-row {
                 flex-direction: row;
                 flex-wrap: wrap;
@@ -638,6 +624,10 @@
                 padding: 14px 25px;
                 font-size: 17px;
                 height: 56px;
+            }
+            .cards-container {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 15px;
             }
             .time-slots {
                 padding: 14px;
@@ -711,7 +701,8 @@
                 padding: 10px;
             }
             .controls,
-            .btn {
+            .btn,
+            .cards-container {
                 display: none !important;
             }
             .table-container {
@@ -731,6 +722,9 @@
             .btn {
                 min-height: 52px;
                 padding: 16px 15px;
+            }
+            .station-card {
+                padding: 20px 15px;
             }
             input,
             select,
@@ -775,9 +769,9 @@
         <!-- بانر المزامنة -->
         <div class="sync-banner">
             <i class="fas fa-cloud"></i>
-            <input type="text" id="sync-code" class="sync-input" placeholder="اسم المحطة (للمزامنة السحابية)">
+            <div class="sync-input" id="current-station-name">اختر محطة من القائمة</div>
             <div id="sync-status" class="status-indicator">
-                <i class="fas fa-circle"></i> غير متصل
+                <i class="fas fa-circle offline"></i> غير متصل
             </div>
         </div>
 
@@ -785,12 +779,12 @@
             <h1>
                 <i class="fas fa-water"></i> سجل محطة نموذج 8 - نموذج إلكتروني
             </h1>
-            <p>نموذج الكتروني - مع إمكانية التصدير إلى Excel</p>
+            <p>نظام الكروت الذكية - اختر محطة وابدأ العمل</p>
 
             <div class="header-info">
                 <div class="info-item">
                     <label for="station-name">اسم المحطة:</label>
-                    <input type="text" id="station-name" value="" class="keyboard-text" placeholder="أدخل اسم المحطة" />
+                    <input type="text" id="station-name" value="" class="keyboard-text" readonly placeholder="سيتم ملؤه تلقائياً عند اختيار محطة" />
                 </div>
                 <div class="header-name">
                     <div class="info-item">
@@ -814,6 +808,11 @@
             </div>
         </header>
 
+        <!-- نظام الكروت -->
+        <div class="cards-container" id="cardsContainer">
+            <!-- الكروت ستتم إضافتها بواسطة JavaScript -->
+        </div>
+
         <div class="controls">
             <div class="btn-group">
                 <button class="btn btn-primary" id="addRowBtn">
@@ -822,11 +821,8 @@
                 <button class="btn btn-secondary" id="resetBtn">
                     <i class="fas fa-redo"></i> إعادة تعيين
                 </button>
-                <button class="btn btn-stations" id="showStationsBtn">
-                    <i class="fas fa-satellite-dish"></i> استعادة من محطة أخرى
-                </button>
-                <button class="btn btn-warning" id="closeShiftBtn">
-                    <i class="fas fa-door-closed"></i> إغلاق الوردية
+                <button class="btn btn-success" id="saveBtn">
+                    <i class="fas fa-save"></i> حفظ التعديلات
                 </button>
             </div>
 
@@ -836,6 +832,9 @@
                 </button>
                 <button class="btn btn-primary" id="printBtn">
                     <i class="fas fa-print"></i> طباعة
+                </button>
+                <button class="btn btn-warning" id="refreshBtn">
+                    <i class="fas fa-sync"></i> تحديث البيانات
                 </button>
             </div>
         </div>
@@ -956,27 +955,6 @@
             <p>
                 تم إنشاء هذا النموذج بواسطة نموذج سجل محطة ضخ الإلكتروني - نسخة 2025
             </p>
-        </div>
-
-        <!-- نافذة عرض المحطات المتاحة -->
-        <div class="stations-modal" id="stationsModal">
-            <div class="stations-content">
-                <div class="stations-header">
-                    <h3><i class="fas fa-satellite-dish"></i> المحطات المتاحة للاستعادة</h3>
-                    <button class="close-btn" id="closeStationsBtn">&times;</button>
-                </div>
-                <div class="stations-list" id="stationsList">
-                    <!-- ستتم إضافة المحطات هنا -->
-                </div>
-                <div class="stations-footer">
-                    <button class="btn btn-primary" id="loadSelectedStation">
-                        <i class="fas fa-download"></i> استعادة المحطة المحددة
-                    </button>
-                    <button class="btn btn-secondary" id="refreshStationsBtn">
-                        <i class="fas fa-sync"></i> تحديث القائمة
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -1154,16 +1132,34 @@
         // أوقات القراءة
         const timeSlots = ["6:00", "11:00", "16:00", "21:00", "2:00"];
 
+        // قائمة المحطات الثابتة
+        const stationCards = [
+            { id: "S1A", name: "محطة S1A", icon: "fa-water", description: "المحطة الرئيسية A" },
+            { id: "S1B", name: "محطة S1B", icon: "fa-water", description: "المحطة الرئيسية B" },
+            { id: "S3", name: "محطة S3", icon: "fa-water", description: "محطة المنطقة 3" },
+            { id: "S4", name: "محطة S4", icon: "fa-water", description: "محطة المنطقة 4" },
+            { id: "S5A", name: "محطة S5A", icon: "fa-water", description: "المحطة الفرعية 5A" },
+            { id: "S5B", name: "محطة S5B", icon: "fa-water", description: "المحطة الفرعية 5B" },
+            { id: "S6", name: "محطة S6", icon: "fa-water", description: "محطة المنطقة 6" },
+            { id: "S7A", name: "محطة S7A", icon: "fa-water", description: "المحطة الفرعية 7A" },
+            { id: "S7B", name: "محطة S7B", icon: "fa-water", description: "المحطة الفرعية 7B" },
+            { id: "S8", name: "محطة S8", icon: "fa-water", description: "محطة المنطقة 8" },
+            { id: "S9A", name: "محطة S9A", icon: "fa-water", description: "المحطة الفرعية 9A" },
+            { id: "S9B", name: "محطة S9B", icon: "fa-water", description: "المحطة الفرعية 9B" },
+            { id: "S9C", name: "محطة S9C", icon: "fa-water", description: "المحطة الفرعية 9C" },
+            { id: "S9D", name: "محطة S9D", icon: "fa-water", description: "المحطة الفرعية 9D" },
+            { id: "S9E", name: "محطة S9E", icon: "fa-water", description: "المحطة الفرعية 9E" },
+            { id: "S9F", name: "محطة S9F", icon: "fa-water", description: "المحطة الفرعية 9F" }
+        ];
+
         // متغيرات التحكم
         let isUpdating = false;
-        let syncRef = null;
-        let allStations = [];
-        let selectedStationId = null;
+        let currentStation = null;
+        let stationDataCache = {};
         let currentStationRef = null;
-
-        // إنشاء الجدول
         const tableBody = document.getElementById("tableBody");
 
+        // إنشاء الجدول
         function generateTable() {
             tableBody.innerHTML = "";
 
@@ -1236,351 +1232,100 @@
             addEventListenersToInputs();
         }
 
-        // إضافة مستمعات الأحداث للحقول
-        function addEventListenersToInputs() {
-            const inputs = document.querySelectorAll('input, textarea, select');
-            inputs.forEach(input => {
-                input.removeEventListener('input', handleInputChange);
-                input.addEventListener('input', handleInputChange);
+        // إنشاء كروت المحطات
+        function generateStationCards() {
+            const cardsContainer = document.getElementById("cardsContainer");
+            cardsContainer.innerHTML = "";
+
+            stationCards.forEach(station => {
+                const card = document.createElement("div");
+                card.className = "station-card";
+                card.dataset.id = station.id;
+                
+                card.innerHTML = `
+                    <div class="station-status"></div>
+                    <div class="data-indicator">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="station-icon">
+                        <i class="fas ${station.icon}"></i>
+                    </div>
+                    <div class="station-name">${station.id}</div>
+                    <div class="station-info">${station.description}</div>
+                `;
+
+                card.addEventListener("click", () => selectStation(station.id));
+                cardsContainer.appendChild(card);
             });
+
+            // تحميل بيانات المحطات من Firebase
+            loadAllStationsData();
         }
 
-        // معالج التغييرات للحفظ التلقائي
-        function handleInputChange() {
-            if (!isUpdating) {
-                saveToLocalStorage();
-                if (database) {
-                    saveToCloud();
-                }
-            }
-        }
-
-        // تحويل الأرقام إلى العربية
-        function unitCountToArabic(num) {
-            const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
-            if (num < 10) {
-                return arabicNumbers[num];
-            }
-            return num.toString();
-        }
-
-        // === نظام تحويل الورديات ===
-
-        // دالة للتحقق من وجود محطة نشطة
-        async function checkActiveStation(stationName) {
-            if (!database) return null;
-            
-            try {
-                const encodedName = encodeURIComponent(stationName);
-                const snapshot = await database.ref('active_stations/' + encodedName).once('value');
-                return snapshot.val();
-            } catch (error) {
-                console.error('Error checking station:', error);
-                return null;
-            }
-        }
-
-        // دالة لتحديد حالة المحطة
-        function markStationAsActive(stationName, operator, shift) {
-            if (!database) return;
-            
-            const encodedName = encodeURIComponent(stationName);
-            currentStationRef = database.ref('active_stations/' + encodedName);
-            
-            const stationData = {
-                name: stationName,
-                operator: operator,
-                shift: shift,
-                lastActivity: firebase.database.ServerValue.TIMESTAMP,
-                status: 'active',
-                date: new Date().toISOString().split('T')[0]
-            };
-            
-            currentStationRef.set(stationData);
-        }
-
-        // دالة لإغلاق المحطة
-        function closeStation(stationName) {
-            if (!database) return;
-            
-            const encodedName = encodeURIComponent(stationName);
-            database.ref('active_stations/' + encodedName).remove();
-            currentStationRef = null;
-        }
-
-        // تحديث نشاط المحطة
-        function updateStationActivity() {
-            if (!currentStationRef || !database) return;
-            
-            currentStationRef.update({
-                lastActivity: firebase.database.ServerValue.TIMESTAMP
-            });
-        }
-
-        // عند إدخال اسم المحطة
-        document.getElementById('station-name').addEventListener('change', async function() {
-            const stationName = this.value.trim();
-            if (!stationName || !database) return;
-            
-            // حفظ رمز المزامنة
-            document.getElementById('sync-code').value = stationName;
-            
-            // التحقق من وجود محطة نشطة بنفس الاسم
-            const activeStation = await checkActiveStation(stationName);
-            
-            if (activeStation && activeStation.status === 'active') {
-                const currentDate = new Date().toISOString().split('T')[0];
-                const isSameDate = activeStation.date === currentDate;
+        // تحديث حالة الكروت
+        function updateCardsStatus() {
+            const cards = document.querySelectorAll('.station-card');
+            cards.forEach(card => {
+                const stationId = card.dataset.id;
+                const statusDiv = card.querySelector('.station-status');
                 
-                let message = `⚠️ هناك محطة نشطة بنفس الاسم\n\n` +
-                             `المشغل الحالي: ${activeStation.operator}\n` +
-                             `الوردية: ${activeStation.shift}\n`;
-                
-                if (!isSameDate) {
-                    message += `التاريخ: ${activeStation.date} (تاريخ سابق)\n`;
-                }
-                
-                message += `\nهل تريد استكمال العمل على هذه المحطة؟\n\n` +
-                          `• نعم: استكمال نفس المحطة\n` +
-                          `• لا: إنشاء محطة جديدة`;
-                
-                const confirmLoad = confirm(message);
-                
-                if (confirmLoad) {
-                    // تحميل البيانات الموجودة
-                    loadFromCloud(encodeURIComponent(stationName));
-                    
-                    // تحديث المشغل والوردية
-                    const currentOperator = document.getElementById('operator-name').value;
-                    const currentShift = document.getElementById('shift').value;
-                    
-                    // تحديث حالة المحطة بالمشغل الجديد
-                    markStationAsActive(stationName, currentOperator, currentShift);
-                    
-                    // إظهار رسالة تأكيد
-                    showNotification(`✅ تم فتح المحطة للوردية ${currentShift}`, 'success');
+                if (stationId === currentStation) {
+                    card.classList.add('active');
+                    statusDiv.className = 'station-status online';
                 } else {
-                    // إدخال اسم مختلف
-                    const newName = prompt('أدخل اسمًا مختلفًا للمحطة:', stationName + ' (نسخة)');
-                    if (newName) {
-                        this.value = newName;
-                        document.getElementById('sync-code').value = newName;
-                        markStationAsActive(newName, 
-                            document.getElementById('operator-name').value, 
-                            document.getElementById('shift').value);
-                    } else {
-                        this.value = '';
-                        document.getElementById('sync-code').value = '';
-                    }
+                    card.classList.remove('active');
+                    statusDiv.className = 'station-status';
                 }
-            } else {
-                // محطة جديدة - وضع علامة نشطة
-                const operator = document.getElementById('operator-name').value;
-                const shift = document.getElementById('shift').value;
-                markStationAsActive(stationName, operator, shift);
-                showNotification(`✅ تم إنشاء محطة جديدة باسم "${stationName}"`, 'success');
-            }
-        });
 
-        // زر إغلاق الوردية
-        document.getElementById('closeShiftBtn').addEventListener('click', function() {
-            const stationName = document.getElementById('station-name').value.trim();
+                // تحديث مؤشر البيانات
+                if (stationDataCache[stationId]) {
+                    card.classList.add('has-data');
+                } else {
+                    card.classList.remove('has-data');
+                }
+            });
+        }
+
+        // اختيار محطة
+        async function selectStation(stationId) {
+            if (!stationId) return;
             
-            if (!stationName) {
-                alert('يرجى إدخال اسم المحطة أولاً');
+            currentStation = stationId;
+            document.getElementById('station-name').value = `محطة ${stationId}`;
+            document.getElementById('current-station-name').textContent = `محطة ${stationId}`;
+            
+            // تحديث حالة الكروت
+            updateCardsStatus();
+            
+            // تحميل البيانات من Firebase
+            await loadStationData(stationId);
+            
+            // إظهار رسالة نجاح
+            showNotification(`✅ تم تحميل محطة ${stationId}`, 'success');
+        }
+
+        // تحميل بيانات محطة محددة
+        async function loadStationData(stationId) {
+            if (!database || !stationId) {
+                showNotification('⚠️ غير متصل بالإنترنت', 'warning');
                 return;
             }
-            
-            if (!confirm(`هل تريد إغلاق الوردية الحالية للمحطة "${stationName}"؟\n\nهذا سيسمح لمشغل آخر بفتح المحطة.`)) {
-                return;
-            }
-            
-            closeStation(stationName);
-            showNotification('✅ تم إغلاق الوردية بنجاح', 'success');
-        });
-
-        // عرض إشعار
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: ${type === 'success' ? '#28a745' : '#ffc107'};
-                color: white;
-                padding: 12px 24px;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                z-index: 9999;
-                font-weight: bold;
-                animation: slideIn 0.3s ease-out;
-            `;
-            
-            notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i> ${message}`;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease-in';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
-
-        // الحفظ في localStorage
-        function saveToLocalStorage() {
-            const data = {
-                station: document.getElementById('station-name').value,
-                operator: document.getElementById('operator-name').value,
-                date: document.getElementById('record-date').value,
-                shift: document.getElementById('shift').value,
-                inputs: {},
-                additional: {
-                    waterPath: document.getElementById('waterPath').value,
-                    tank1: document.getElementById('tank1Level').value,
-                    tank2: document.getElementById('tank2Level').value,
-                    tank3: document.getElementById('tank3Level').value,
-                    comp1: document.getElementById('compressor1').value,
-                    comp2: document.getElementById('compressor2').value,
-                    com: document.getElementById('com').value,
-                    start: document.getElementById('startTime').value,
-                    end: document.getElementById('endTime').value,
-                    notes: document.getElementById('dailyNotes').value
-                }
-            };
-
-            document.querySelectorAll('.data-input').forEach(input => {
-                if (input.value) data.inputs[input.id] = input.value;
-            });
 
             try {
-                localStorage.setItem('pump_station_data', JSON.stringify(data));
-            } catch (e) {
-                console.log("Local storage error:", e);
-            }
-        }
-
-        // تحميل من localStorage
-        function loadFromLocalStorage() {
-            try {
-                const saved = localStorage.getItem('pump_station_data');
-                if (!saved) return;
-
-                const data = JSON.parse(saved);
-                isUpdating = true;
-
-                document.getElementById('station-name').value = data.station || '';
-                document.getElementById('operator-name').value = data.operator || '';
-                document.getElementById('record-date').value = data.date || '';
-                document.getElementById('shift').value = data.shift || 'صباحية';
-
-                if (data.inputs) {
-                    Object.entries(data.inputs).forEach(([id, value]) => {
-                        const el = document.getElementById(id);
-                        if (el) el.value = value;
-                    });
-                }
-
-                if (data.additional) {
-                    document.getElementById('waterPath').value = data.additional.waterPath || '';
-                    document.getElementById('tank1Level').value = data.additional.tank1 || '';
-                    document.getElementById('tank2Level').value = data.additional.tank2 || '';
-                    document.getElementById('tank3Level').value = data.additional.tank3 || '';
-                    document.getElementById('compressor1').value = data.additional.comp1 || '';
-                    document.getElementById('compressor2').value = data.additional.comp2 || '';
-                    document.getElementById('com').value = data.additional.com || '';
-                    document.getElementById('startTime').value = data.additional.start || '06:00';
-                    document.getElementById('endTime').value = data.additional.end || '24:00';
-                    document.getElementById('dailyNotes').value = data.additional.notes || '';
-                }
-
-                isUpdating = false;
-                calculateTotalHours();
-                
-                // تحديث رمز المزامنة
-                if (data.station) {
-                    document.getElementById('sync-code').value = data.station;
-                }
-            } catch (e) {
-                console.log("Load from storage error:", e);
-            }
-        }
-
-        // الحفظ في السحابة
-        function saveToCloud() {
-            if (!database) return;
-
-            const stationName = document.getElementById('station-name').value.trim();
-            if (!stationName || isUpdating) return;
-            
-            // تحديث نشاط المحطة
-            updateStationActivity();
-            
-            const code = encodeURIComponent(stationName);
-            const statusEl = document.getElementById('sync-status');
-            
-            if (statusEl) {
-                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
-                statusEl.className = 'status-indicator syncing';
-            }
-
-            const data = {
-                station: stationName,
-                operator: document.getElementById('operator-name').value,
-                date: document.getElementById('record-date').value,
-                shift: document.getElementById('shift').value,
-                inputs: {},
-                additional: {
-                    waterPath: document.getElementById('waterPath').value,
-                    tank1: document.getElementById('tank1Level').value,
-                    tank2: document.getElementById('tank2Level').value,
-                    tank3: document.getElementById('tank3Level').value,
-                    comp1: document.getElementById('compressor1').value,
-                    comp2: document.getElementById('compressor2').value,
-                    com: document.getElementById('com').value,
-                    start: document.getElementById('startTime').value,
-                    end: document.getElementById('endTime').value,
-                    notes: document.getElementById('dailyNotes').value
-                },
-                lastUpdated: firebase.database.ServerValue.TIMESTAMP
-            };
-
-            document.querySelectorAll('.data-input').forEach(input => {
-                if (input.value) data.inputs[input.id] = input.value;
-            });
-
-            database.ref('stations/' + code).set(data).then(() => {
-                if (statusEl) {
-                    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> تم الحفظ';
-                    statusEl.className = 'status-indicator online';
-                }
-            }).catch(error => {
-                console.log("Cloud save error:", error);
-                if (statusEl) {
-                    statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ في الحفظ';
-                    statusEl.className = 'status-indicator offline';
-                }
-            });
-        }
-
-        // تحميل من السحابة
-        function loadFromCloud(code) {
-            if (!database) return;
-
-            if (syncRef) syncRef.off();
-
-            const statusEl = document.getElementById('sync-status');
-            if (statusEl) {
+                const statusEl = document.getElementById('sync-status');
                 statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل...';
                 statusEl.className = 'status-indicator syncing';
-            }
 
-            syncRef = database.ref('stations/' + code);
-            syncRef.on('value', (snapshot) => {
+                const snapshot = await database.ref('stations/' + stationId).once('value');
                 const data = snapshot.val();
-                if (data && !isUpdating) {
-                    isUpdating = true;
+                
+                isUpdating = true;
 
-                    document.getElementById('station-name').value = data.station || '';
+                if (data) {
+                    // حفظ في الكاش
+                    stationDataCache[stationId] = data;
+                    
+                    // تحديث الواجهة
                     document.getElementById('operator-name').value = data.operator || '';
                     document.getElementById('record-date').value = data.date || '';
                     document.getElementById('shift').value = data.shift || 'صباحية';
@@ -1606,249 +1351,286 @@
                     }
 
                     calculateTotalHours();
-                    saveToLocalStorage();
-                    isUpdating = false;
-
-                    if (statusEl) {
-                        statusEl.innerHTML = '<i class="fas fa-check-circle"></i> تم التحميل';
-                        statusEl.className = 'status-indicator online';
-                    }
+                    showNotification(`✅ تم تحميل بيانات محطة ${stationId}`, 'success');
                 } else {
-                    if (statusEl) {
-                        statusEl.innerHTML = '<i class="fas fa-info-circle"></i> لا توجد بيانات سابقة';
-                        statusEl.className = 'status-indicator warning';
-                    }
+                    // بيانات جديدة
+                    clearForm();
+                    showNotification(`✨ محطة جديدة: ${stationId} - يمكنك إدخال البيانات`, 'info');
                 }
-            });
-        }
 
-        // === نظام استعادة المحطات المتاحة ===
+                isUpdating = false;
+                
+                statusEl.innerHTML = '<i class="fas fa-circle online"></i> متصل';
+                statusEl.className = 'status-indicator online';
 
-        // عرض قائمة المحطات
-        document.getElementById('showStationsBtn').addEventListener('click', async function() {
-            await loadAvailableStations();
-            document.getElementById('stationsModal').classList.add('active');
-        });
-
-        // إغلاق النافذة
-        document.getElementById('closeStationsBtn').addEventListener('click', function() {
-            document.getElementById('stationsModal').classList.remove('active');
-        });
-
-        // تحديث القائمة
-        document.getElementById('refreshStationsBtn').addEventListener('click', loadAvailableStations);
-
-        // عند النقر على محطة في القائمة
-        document.getElementById('stationsList').addEventListener('click', function(e) {
-            const stationItem = e.target.closest('.station-item');
-            if (stationItem) {
-                // إزالة التحديد السابق
-                document.querySelectorAll('.station-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-
-                // تحديد المحطة الجديدة
-                stationItem.classList.add('active');
-                selectedStationId = stationItem.dataset.id;
-            }
-        });
-
-        // استعادة المحطة المحددة
-        document.getElementById('loadSelectedStation').addEventListener('click', async function() {
-            if (!selectedStationId) {
-                alert('يرجى تحديد محطة أولاً');
-                return;
-            }
-
-            if (!confirm('هل تريد استبدال البيانات الحالية ببيانات هذه المحطة؟')) {
-                return;
-            }
-
-            try {
-                const snapshot = await database.ref('stations/' + selectedStationId).once('value');
-                const data = snapshot.val();
-
-                if (data) {
-                    isUpdating = true;
-
-                    // تحديث حقل اسم المحطة
-                    const stationName = decodeURIComponent(selectedStationId);
-                    document.getElementById('station-name').value = stationName;
-                    document.getElementById('sync-code').value = stationName;
-
-                    // تحديث باقي البيانات
-                    fillUIWithStationData(data);
-
-                    // التحقق من وجود محطة نشطة
-                    const activeStation = await checkActiveStation(stationName);
-                    if (activeStation && activeStation.status === 'active') {
-                        alert(`⚠️ هذه المحطة حالياً نشطة تحت إدارة:\nالمشغل: ${activeStation.operator}\nالوردية: ${activeStation.shift}\n\nسيتم فتح المحطة باسمك الآن.`);
-                    }
-
-                    // جعل المحطة نشطة بالمشغل الحالي
-                    markStationAsActive(stationName, 
-                        document.getElementById('operator-name').value, 
-                        document.getElementById('shift').value);
-
-                    // حفظ محلياً
-                    saveToLocalStorage();
-
-                    // إغلاق النافذة
-                    document.getElementById('stationsModal').classList.remove('active');
-
-                    showNotification('✅ تم استعادة بيانات المحطة بنجاح', 'success');
-                } else {
-                    alert('لم يتم العثور على بيانات للمحطة المحددة');
-                }
             } catch (error) {
                 console.error('Error loading station:', error);
-                alert('حدث خطأ أثناء استعادة البيانات');
+                showNotification('❌ خطأ في تحميل البيانات', 'error');
+                isUpdating = false;
             }
-        });
+        }
 
-        // دالة تحميل المحطات المتاحة
-        async function loadAvailableStations() {
-            if (!database) {
-                alert('غير متصل بالسحابة. تأكد من اتصال الإنترنت.');
-                return;
-            }
-
-            const statusEl = document.getElementById('sync-status');
-            if (statusEl) {
-                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري جلب المحطات...';
-                statusEl.className = 'status-indicator syncing';
-            }
+        // تحميل جميع بيانات المحطات
+        async function loadAllStationsData() {
+            if (!database) return;
 
             try {
                 const snapshot = await database.ref('stations').once('value');
-                const stations = snapshot.val();
-                const stationsList = document.getElementById('stationsList');
-
-                allStations = [];
-
-                if (stations) {
-                    // تحويل البيانات إلى مصفوفة
-                    Object.entries(stations).forEach(([id, data]) => {
-                        if (data && data.station) {
-                            allStations.push({
-                                id: id,
-                                name: data.station || decodeURIComponent(id),
-                                operator: data.operator || 'غير معروف',
-                                date: data.date || 'غير معروف',
-                                lastUpdated: data.lastUpdated || Date.now(),
-                                data: data
-                            });
-                        }
+                const allData = snapshot.val();
+                
+                if (allData) {
+                    Object.entries(allData).forEach(([stationId, data]) => {
+                        stationDataCache[stationId] = data;
                     });
-
-                    // ترتيب المحطات حسب آخر تحديث (الأحدث أولاً)
-                    allStations.sort((a, b) => b.lastUpdated - a.lastUpdated);
-
-                    // الحصول على المحطات النشطة
-                    const activeStationsSnapshot = await database.ref('active_stations').once('value');
-                    const activeStations = activeStationsSnapshot.val() || {};
-
-                    // عرض المحطات
-                    stationsList.innerHTML = '';
-                    allStations.forEach(station => {
-                        const stationDiv = document.createElement('div');
-                        stationDiv.className = 'station-item';
-                        stationDiv.dataset.id = station.id;
-
-                        const isActive = activeStations[station.id] && 
-                                        activeStations[station.id].status === 'active';
-                        
-                        const timeStr = station.lastUpdated ?
-                            new Date(station.lastUpdated).toLocaleString('ar-SA', {
-                                year: 'numeric',
-                                month: '2-digit',
-                                day: '2-digit',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            }) : 'غير معروف';
-
-                        stationDiv.innerHTML = `
-                            <div class="station-name">
-                                ${station.name}
-                                ${isActive ? '<span class="station-badge"><i class="fas fa-circle"></i> نشطة</span>' : ''}
-                            </div>
-                            <div class="station-info">
-                                <span><i class="fas fa-user"></i> ${station.operator}</span>
-                                <span><i class="fas fa-calendar"></i> ${station.date}</span>
-                            </div>
-                            <div class="station-time">
-                                <i class="fas fa-clock"></i> آخر تحديث: ${timeStr}
-                            </div>
-                        `;
-
-                        if (isActive) {
-                            stationDiv.classList.add('station-active');
-                        }
-
-                        stationsList.appendChild(stationDiv);
-                    });
-                } else {
-                    stationsList.innerHTML = `
-                        <div class="empty-stations">
-                            <i class="fas fa-inbox"></i>
-                            <h4>لا توجد محطات متاحة</h4>
-                            <p>لم يتم حفظ أي محطات على السحابة بعد</p>
-                        </div>
-                    `;
-                }
-
-                if (statusEl) {
-                    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> تم تحديث القائمة';
-                    statusEl.className = 'status-indicator online';
+                    
+                    // تحديث حالة الكروت
+                    updateCardsStatus();
                 }
             } catch (error) {
-                console.error('Error loading stations:', error);
-                stationsList.innerHTML = `
-                    <div class="empty-stations">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h4>خطأ في الاتصال</h4>
-                        <p>تعذر الاتصال بالسحابة. تأكد من اتصال الإنترنت</p>
-                    </div>
-                `;
-
-                if (statusEl) {
-                    statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ في الاتصال';
-                    statusEl.className = 'status-indicator offline';
-                }
+                console.error('Error loading all stations:', error);
             }
         }
 
-        // دالة ملء البيانات من محطة محددة
-        function fillUIWithStationData(data) {
-            // تحديث البيانات الأساسية
-            document.getElementById('operator-name').value = data.operator || '';
-            document.getElementById('record-date').value = data.date || '';
-            document.getElementById('shift').value = data.shift || 'صباحية';
+        // حفظ البيانات
+        async function saveStationData() {
+            if (!currentStation || !database) {
+                showNotification('⚠️ لم تختر محطة أو غير متصل بالإنترنت', 'warning');
+                return;
+            }
 
-            // تحديث بيانات الجدول
-            if (data.inputs) {
-                Object.entries(data.inputs).forEach(([id, value]) => {
-                    const el = document.getElementById(id);
-                    if (el) el.value = value;
+            const operator = document.getElementById('operator-name').value.trim();
+            if (!operator) {
+                alert('يرجى إدخال اسم المشغل أولاً');
+                return;
+            }
+
+            if (!confirm(`هل تريد حفظ بيانات محطة ${currentStation}؟`)) {
+                return;
+            }
+
+            try {
+                const statusEl = document.getElementById('sync-status');
+                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+                statusEl.className = 'status-indicator syncing';
+
+                const data = {
+                    station: `محطة ${currentStation}`,
+                    operator: operator,
+                    date: document.getElementById('record-date').value,
+                    shift: document.getElementById('shift').value,
+                    inputs: {},
+                    additional: {
+                        waterPath: document.getElementById('waterPath').value,
+                        tank1: document.getElementById('tank1Level').value,
+                        tank2: document.getElementById('tank2Level').value,
+                        tank3: document.getElementById('tank3Level').value,
+                        comp1: document.getElementById('compressor1').value,
+                        comp2: document.getElementById('compressor2').value,
+                        com: document.getElementById('com').value,
+                        start: document.getElementById('startTime').value,
+                        end: document.getElementById('endTime').value,
+                        notes: document.getElementById('dailyNotes').value
+                    },
+                    lastUpdated: firebase.database.ServerValue.TIMESTAMP,
+                    lastOperator: operator,
+                    lastShift: document.getElementById('shift').value
+                };
+
+                document.querySelectorAll('.data-input').forEach(input => {
+                    if (input.value) data.inputs[input.id] = input.value;
                 });
-            }
 
-            // تحديث البيانات الإضافية
-            if (data.additional) {
-                document.getElementById('waterPath').value = data.additional.waterPath || '';
-                document.getElementById('tank1Level').value = data.additional.tank1 || '';
-                document.getElementById('tank2Level').value = data.additional.tank2 || '';
-                document.getElementById('tank3Level').value = data.additional.tank3 || '';
-                document.getElementById('compressor1').value = data.additional.comp1 || '';
-                document.getElementById('compressor2').value = data.additional.comp2 || '';
-                document.getElementById('com').value = data.additional.com || '';
-                document.getElementById('startTime').value = data.additional.start || '06:00';
-                document.getElementById('endTime').value = data.additional.end || '24:00';
-                document.getElementById('dailyNotes').value = data.additional.notes || '';
-            }
+                await database.ref('stations/' + currentStation).set(data);
+                
+                // تحديث الكاش
+                stationDataCache[currentStation] = data;
+                
+                // تحديث حالة الكرت
+                updateCardsStatus();
+                
+                showNotification(`✅ تم حفظ بيانات محطة ${currentStation} بنجاح`, 'success');
+                
+                statusEl.innerHTML = '<i class="fas fa-circle online"></i> متصل';
+                statusEl.className = 'status-indicator online';
 
+                // حفظ محلياً
+                saveToLocalStorage();
+
+            } catch (error) {
+                console.error('Error saving station:', error);
+                showNotification('❌ خطأ في حفظ البيانات', 'error');
+            }
+        }
+
+        // إضافة مستمعات الأحداث للحقول
+        function addEventListenersToInputs() {
+            const inputs = document.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                input.removeEventListener('input', handleInputChange);
+                input.addEventListener('input', handleInputChange);
+            });
+        }
+
+        // معالج التغييرات للحفظ التلقائي
+        function handleInputChange() {
+            if (!isUpdating && currentStation) {
+                saveToLocalStorage();
+            }
+        }
+
+        // الحفظ في localStorage
+        function saveToLocalStorage() {
+            if (!currentStation) return;
+
+            const data = {
+                station: currentStation,
+                operator: document.getElementById('operator-name').value,
+                date: document.getElementById('record-date').value,
+                shift: document.getElementById('shift').value,
+                inputs: {},
+                additional: {
+                    waterPath: document.getElementById('waterPath').value,
+                    tank1: document.getElementById('tank1Level').value,
+                    tank2: document.getElementById('tank2Level').value,
+                    tank3: document.getElementById('tank3Level').value,
+                    comp1: document.getElementById('compressor1').value,
+                    comp2: document.getElementById('compressor2').value,
+                    com: document.getElementById('com').value,
+                    start: document.getElementById('startTime').value,
+                    end: document.getElementById('endTime').value,
+                    notes: document.getElementById('dailyNotes').value
+                }
+            };
+
+            document.querySelectorAll('.data-input').forEach(input => {
+                if (input.value) data.inputs[input.id] = input.value;
+            });
+
+            try {
+                localStorage.setItem(`pump_station_${currentStation}`, JSON.stringify(data));
+                localStorage.setItem('last_station', currentStation);
+            } catch (e) {
+                console.log("Local storage error:", e);
+            }
+        }
+
+        // تحميل من localStorage
+        function loadFromLocalStorage() {
+            try {
+                const lastStation = localStorage.getItem('last_station');
+                if (lastStation && stationCards.some(s => s.id === lastStation)) {
+                    const saved = localStorage.getItem(`pump_station_${lastStation}`);
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        selectStation(lastStation);
+                        
+                        setTimeout(() => {
+                            isUpdating = true;
+                            document.getElementById('operator-name').value = data.operator || '';
+                            document.getElementById('record-date').value = data.date || '';
+                            document.getElementById('shift').value = data.shift || 'صباحية';
+
+                            if (data.inputs) {
+                                Object.entries(data.inputs).forEach(([id, value]) => {
+                                    const el = document.getElementById(id);
+                                    if (el) el.value = value;
+                                });
+                            }
+
+                            if (data.additional) {
+                                document.getElementById('waterPath').value = data.additional.waterPath || '';
+                                document.getElementById('tank1Level').value = data.additional.tank1 || '';
+                                document.getElementById('tank2Level').value = data.additional.tank2 || '';
+                                document.getElementById('tank3Level').value = data.additional.tank3 || '';
+                                document.getElementById('compressor1').value = data.additional.comp1 || '';
+                                document.getElementById('compressor2').value = data.additional.comp2 || '';
+                                document.getElementById('com').value = data.additional.com || '';
+                                document.getElementById('startTime').value = data.additional.start || '06:00';
+                                document.getElementById('endTime').value = data.additional.end || '24:00';
+                                document.getElementById('dailyNotes').value = data.additional.notes || '';
+                            }
+
+                            calculateTotalHours();
+                            isUpdating = false;
+                        }, 500);
+                    }
+                }
+            } catch (e) {
+                console.log("Load from storage error:", e);
+            }
+        }
+
+        // مسح النموذج
+        function clearForm() {
+            isUpdating = true;
+            
+            document.getElementById('operator-name').value = '';
+            document.getElementById('record-date').valueAsDate = new Date();
+            document.getElementById('shift').value = 'صباحية';
+            document.getElementById('waterPath').value = '';
+            document.getElementById('tank1Level').value = '';
+            document.getElementById('tank2Level').value = '';
+            document.getElementById('tank3Level').value = '';
+            document.getElementById('compressor1').value = '';
+            document.getElementById('compressor2').value = '';
+            document.getElementById('com').value = '';
+            document.getElementById('startTime').value = '06:00';
+            document.getElementById('endTime').value = '24:00';
+            document.getElementById('dailyNotes').value = '';
+            
+            document.querySelectorAll('.data-input').forEach(input => {
+                input.value = '';
+            });
+            
             calculateTotalHours();
             isUpdating = false;
+        }
+
+        // تحويل الأرقام إلى العربية
+        function unitCountToArabic(num) {
+            const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+            if (num < 10) {
+                return arabicNumbers[num];
+            }
+            return num.toString();
+        }
+
+        // عرض إشعار
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'success' ? '#28a745' : 
+                           type === 'warning' ? '#fd7e14' : 
+                           type === 'error' ? '#dc3545' : '#17a2b8'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 9999;
+                font-weight: bold;
+                animation: slideIn 0.3s ease-out;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                min-width: 300px;
+                text-align: center;
+            `;
+            
+            const icon = type === 'success' ? 'fa-check-circle' : 
+                        type === 'warning' ? 'fa-exclamation-triangle' : 
+                        type === 'error' ? 'fa-times-circle' : 'fa-info-circle';
+            
+            notification.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
 
         // إضافة وحدة جديدة
@@ -1924,6 +1706,7 @@
 
             pumpUnits.push(newUnit);
             generateTable();
+            addEventListenersToInputs();
 
             setTimeout(() => {
                 const unitHeaders = document.querySelectorAll('.unit-header');
@@ -1939,61 +1722,46 @@
 
         // إعادة تعيين النموذج
         document.getElementById("resetBtn").addEventListener("click", function() {
-            if (confirm("هل تريد إعادة تعيين جميع البيانات؟")) {
-                // حفظ نسخة احتياطية
-                try {
-                    const currentData = localStorage.getItem('pump_station_data');
-                    if (currentData) {
-                        localStorage.setItem('pump_backup', currentData);
-                    }
-                } catch (e) {
-                    console.log("Backup error:", e);
-                }
+            if (confirm("هل تريد إعادة تعيين جميع البيانات في هذه المحطة؟")) {
+                clearForm();
+                showNotification('تم إعادة تعيين البيانات', 'info');
+            }
+        });
 
-                document.getElementById("station-name").value = "محطة الضخ الرئيسية";
-                document.getElementById("operator-name").value = "";
-                document.getElementById("record-date").valueAsDate = new Date();
-                document.getElementById("shift").value = "صباحية";
+        // زر الحفظ
+        document.getElementById("saveBtn").addEventListener("click", saveStationData);
 
-                document.getElementById("waterPath").value = "";
-                document.getElementById("tank1Level").value = "";
-                document.getElementById("tank2Level").value = "";
-                document.getElementById("tank3Level").value = "";
-                document.getElementById("compressor1").value = "";
-                document.getElementById("compressor2").value = "";
-                document.getElementById("com").value = "";
-                document.getElementById("startTime").value = "06:00";
-                document.getElementById("endTime").value = "24:00";
-                document.getElementById("totalHours").value = "";
-                document.getElementById("dailyNotes").value = "";
-
-                document.querySelectorAll('.data-input').forEach(input => {
-                    input.value = "";
-                });
-
-                while (pumpUnits.length > 3) {
-                    pumpUnits.pop();
-                }
-
-                generateTable();
-                calculateTotalHours();
-                saveToLocalStorage();
-
-                alert("تم إعادة تعيين النموذج بنجاح");
+        // زر التحديث
+        document.getElementById("refreshBtn").addEventListener("click", async function() {
+            if (currentStation) {
+                await loadStationData(currentStation);
+                showNotification('تم تحديث البيانات', 'success');
+            } else {
+                showNotification('اختر محطة أولاً', 'warning');
             }
         });
 
         // طباعة النموذج
         document.getElementById("printBtn").addEventListener("click", function() {
+            if (!currentStation) {
+                alert("اختر محطة أولاً");
+                return;
+            }
             window.print();
         });
 
         // تصدير إلى Excel
-        document.getElementById("exportBtn").addEventListener("click", exportToExcel);
+        document.getElementById("exportBtn").addEventListener("click", function() {
+            if (!currentStation) {
+                alert("اختر محطة أولاً");
+                return;
+            }
+            exportToExcel();
+        });
 
         function exportToExcel() {
             const wsData = [];
-            wsData.push(["سجل محطة ضخ - بيانات المحطة"]);
+            wsData.push([`سجل محطة ضخ - ${currentStation}`]);
             wsData.push([]);
             wsData.push(["اسم المحطة", document.getElementById("station-name").value]);
             wsData.push(["اسم المشغل", document.getElementById("operator-name").value]);
@@ -2076,14 +1844,13 @@
             }];
             ws["!cols"] = wscols;
 
-            XLSX.utils.book_append_sheet(wb, ws, "سجل محطة الضخ");
+            XLSX.utils.book_append_sheet(wb, ws, `محطة ${currentStation}`);
 
-            const stationName = document.getElementById("station-name").value || "محطة الضخ";
             const date = document.getElementById("record-date").value || new Date().toISOString().split("T")[0];
-            const fileName = `${stationName}_${date}.xlsx`;
+            const fileName = `${currentStation}_${date}.xlsx`;
 
             XLSX.writeFile(wb, fileName);
-            alert("تم تصدير البيانات إلى ملف Excel بنجاح");
+            showNotification("تم تصدير البيانات إلى ملف Excel", "success");
         }
 
         // حساب عدد ساعات التشغيل تلقائياً
@@ -2109,30 +1876,10 @@
             }
         }
 
-        // المزامنة عند تغيير رمز المزامنة
-        document.getElementById('sync-code').addEventListener('input', function(e) {
-            const code = e.target.value.trim();
-            if (code) {
-                loadFromCloud(encodeURIComponent(code));
-                localStorage.setItem('last_sync_code', code);
-            }
-        });
-
-        // دالة للبحث عن التحديثات تلقائياً
-        function setupAutoRefresh() {
-            // تحديث قائمة المحطات كل 5 دقائق إذا كانت النافذة مفتوحة
-            setInterval(() => {
-                const modal = document.getElementById('stationsModal');
-                if (modal.classList.contains('active')) {
-                    loadAvailableStations();
-                }
-            }, 300000); // 5 دقائق
-        }
-
         // تحميل البيانات عند بدء الصفحة
         document.addEventListener('DOMContentLoaded', function() {
             generateTable();
-            loadFromLocalStorage();
+            generateStationCards();
             calculateTotalHours();
 
             // تحديث حالة الاتصال
@@ -2145,15 +1892,8 @@
                 statusEl.className = 'status-indicator offline';
             }
 
-            // تحميل آخر رمز مزامنة
-            const lastCode = localStorage.getItem('last_sync_code');
-            if (lastCode && database) {
-                document.getElementById('sync-code').value = lastCode;
-                setTimeout(() => loadFromCloud(encodeURIComponent(lastCode)), 500);
-            }
-
-            // بدء التحديث التلقائي
-            setTimeout(setupAutoRefresh, 5000);
+            // تحميل آخر محطة
+            loadFromLocalStorage();
 
             // تحسين تجربة اللمس للأجهزة المحمولة
             if ('ontouchstart' in window) {
@@ -2170,33 +1910,39 @@
             }
         });
 
-        // حفظ رمز المزامنة عند الخروج
-        window.addEventListener('beforeunload', function() {
-            const code = document.getElementById('sync-code').value.trim();
-            if (code) {
-                localStorage.setItem('last_sync_code', code);
+        // حفظ قبل الخروج
+        window.addEventListener('beforeunload', function(e) {
+            if (currentStation) {
+                saveToLocalStorage();
+            }
+        });
+
+        // إضافة أنميشن CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(-50%) translateY(-20px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(-50%) translateY(0);
+                    opacity: 1;
+                }
             }
             
-            // إغلاق المحطة إذا كانت مفتوحة
-            const stationName = document.getElementById('station-name').value.trim();
-            if (stationName && confirm('هل تريد إغلاق الوردية قبل الخروج؟')) {
-                closeStation(stationName);
+            @keyframes slideOut {
+                from {
+                    transform: translateX(-50%) translateY(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(-50%) translateY(-20px);
+                    opacity: 0;
+                }
             }
-        });
-
-        // إغلاق نافذة المحطات بالضغط على ESC
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.getElementById('stationsModal').classList.remove('active');
-            }
-        });
-
-        // إغلاق نافذة المحطات بالضغط خارج المحتوى
-        document.getElementById('stationsModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.remove('active');
-            }
-        });
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 
