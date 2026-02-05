@@ -3,1159 +3,1858 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 نظام إدارة محطات الضخ السحابي</title>
+    <title>نظام محطات الضخ - قاعدة بيانات سحابية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --primary-color: #1a73e8;
-            --secondary-color: #34a853;
-            --warning-color: #fbbc05;
-            --danger-color: #ea4335;
-            --dark-color: #202124;
-            --light-color: #f8f9fa;
-            --border-color: #dadce0;
-        }
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
             min-height: 100vh;
             padding: 20px;
+            direction: rtl;
         }
         
-        /* الشريط العلوي */
-        .top-bar {
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
             background: white;
-            padding: 15px 30px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
         }
         
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .logo i {
-            font-size: 2rem;
-            color: var(--primary-color);
-        }
-        
-        .logo h1 {
-            color: var(--dark-color);
-            font-size: 1.8rem;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            background: var(--primary-color);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* رأس الصفحة */
+        .main-header {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1d3d75 100%);
             color: white;
-            font-weight: bold;
+            padding: 30px;
+            text-align: center;
+            position: relative;
         }
         
-        /* الحاوية الرئيسية */
-        .dashboard {
+        .main-header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .main-header h1 i {
+            margin-left: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+        }
+        
+        /* حالة الاتصال */
+        .connection-status {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px 25px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+            margin-top: 15px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4cd964;
+            box-shadow: 0 0 10px #4cd964;
+        }
+        
+        .status-dot.offline {
+            background: #ff3b30;
+            box-shadow: 0 0 10px #ff3b30;
+        }
+        
+        /* قسم الكروت */
+        .cards-section {
+            padding: 40px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            display: none;
+        }
+        
+        .cards-section.active {
+            display: block;
+        }
+        
+        .section-title {
+            text-align: center;
+            color: #2c5aa0;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 50%;
+            transform: translateX(50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #2c5aa0, #26d0ce);
+            border-radius: 2px;
+        }
+        
+        .cards-grid {
             display: grid;
-            grid-template-columns: 280px 1fr;
-            gap: 20px;
-            height: calc(100vh - 120px);
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
         }
         
-        /* القائمة الجانبية */
-        .sidebar {
+        .station-card {
             background: white;
             border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 30px 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .station-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #2c5aa0, #26d0ce);
+            transform: translateX(100%);
+            transition: transform 0.4s;
+        }
+        
+        .station-card:hover:before {
+            transform: translateX(0);
+        }
+        
+        .station-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border-color: #2c5aa0;
+        }
+        
+        .station-card.active {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #f8fff9 0%, #ffffff 100%);
+            box-shadow: 0 15px 35px rgba(40, 167, 69, 0.2);
+        }
+        
+        .station-icon {
+            font-size: 3.5rem;
+            color: #2c5aa0;
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .station-card:hover .station-icon {
+            transform: rotate(15deg) scale(1.1);
+        }
+        
+        .station-id {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1d3d75 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 30px;
+            display: inline-block;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.3);
+        }
+        
+        .station-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 12px;
+        }
+        
+        .station-desc {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .station-status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #dc3545;
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
+        }
+        
+        .station-status.online {
+            background: #28a745;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        /* قسم النموذج */
+        .form-section {
+            display: none;
+            padding: 40px;
+            background: white;
+            min-height: 100vh;
+        }
+        
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .station-header {
+            background: linear-gradient(135deg, #1d3d75 0%, #2c5aa0 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 35px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .station-header:before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.1;
+        }
+        
+        .station-header h2 {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .station-info-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 12px;
+            flex-wrap: wrap;
+            gap: 20px;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .info-item {
+            text-align: center;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .info-item label {
+            display: block;
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .info-item span {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        /* زر العودة */
+        .back-btn {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+        }
+        
+        .back-btn:hover {
+            background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+            transform: translateX(-10px);
+            box-shadow: 0 8px 20px rgba(108, 117, 125, 0.4);
+        }
+        
+        /* بيانات المشغل */
+        .header-info {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: linear-gradient(135deg, #eef5ff 0%, #e3ecff 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(44, 90, 160, 0.1);
+        }
+        
+        .header-name {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
         
-        .nav-item {
+        .info-item-input {
             display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            color: #5f6368;
-            text-decoration: none;
+            flex-direction: column;
+            width: 100%;
         }
         
-        .nav-item:hover {
-            background: #f1f3f4;
-            transform: translateX(-5px);
-        }
-        
-        .nav-item.active {
-            background: var(--primary-color);
-            color: white;
-        }
-        
-        .nav-item i {
-            font-size: 1.2rem;
-        }
-        
-        /* المحتوى الرئيسي */
-        .main-content {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            overflow-y: auto;
-        }
-        
-        /* كروت الإحصائيات */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            border-left: 5px solid var(--primary-color);
-            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .stat-card h3 {
-            color: #5f6368;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .stat-card .value {
-            font-size: 2.2rem;
+        .info-item-input label {
             font-weight: bold;
-            color: var(--dark-color);
-            margin-bottom: 5px;
-        }
-        
-        .stat-card .change {
-            color: var(--secondary-color);
-            font-size: 0.9rem;
-        }
-        
-        /* جدول المحطات */
-        .stations-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        .stations-table th {
-            background: #f8f9fa;
-            padding: 15px;
-            text-align: right;
-            color: var(--dark-color);
-            font-weight: 600;
-            border-bottom: 2px solid var(--border-color);
-        }
-        
-        .stations-table td {
-            padding: 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .stations-table tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        
-        .status-online {
-            background: #e6f4ea;
-            color: var(--secondary-color);
-        }
-        
-        .status-offline {
-            background: #fce8e6;
-            color: var(--danger-color);
-        }
-        
-        .status-maintenance {
-            background: #fef7e0;
-            color: var(--warning-color);
-        }
-        
-        /* نموذج إضافة محطة */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            display: none;
-        }
-        
-        .modal.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--dark-color);
-            font-weight: 500;
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-        
-        /* الأزرار */
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 1rem;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #0d62d9;
-            transform: translateY(-2px);
-        }
-        
-        .btn-success {
-            background: var(--secondary-color);
-            color: white;
-        }
-        
-        .btn-warning {
-            background: var(--warning-color);
-            color: white;
-        }
-        
-        .btn-danger {
-            background: var(--danger-color);
-            color: white;
-        }
-        
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 0.9rem;
-        }
-        
-        /* الرسومات البيانية */
-        .chart-container {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
-        }
-        
-        /* التنبيهات */
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .alert-success {
-            background: #e6f4ea;
-            color: var(--secondary-color);
-            border-left: 4px solid var(--secondary-color);
-        }
-        
-        .alert-error {
-            background: #fce8e6;
-            color: var(--danger-color);
-            border-left: 4px solid var(--danger-color);
-        }
-        
-        .alert-warning {
-            background: #fef7e0;
-            color: var(--warning-color);
-            border-left: 4px solid var(--warning-color);
-        }
-        
-        /* متابعة في الوقت الحقيقي */
-        .realtime-indicator {
+            color: #2c5aa0;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 8px 15px;
-            background: #e6f4ea;
+        }
+        
+        .info-item-input input,
+        .info-item-input select {
+            padding: 16px 20px;
+            border: 2px solid #d1d9e6;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            width: 100%;
+            height: 58px;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .info-item-input input:focus,
+        .info-item-input select:focus {
+            border-color: #2c5aa0;
+            box-shadow: 0 0 0 4px rgba(44, 90, 160, 0.2);
+            outline: none;
+            transform: translateY(-2px);
+        }
+        
+        /* الأزرار */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: 30px 0;
+            padding: 30px;
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(44, 90, 160, 0.1);
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 18px 30px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            min-width: 200px;
+            height: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+        
+        .btn:hover:before {
+            transform: translateX(100%);
+        }
+        
+        .btn:hover {
+            transform: translateY(-5px) scale(1.05);
+        }
+        
+        .btn i {
+            font-size: 1.3rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1d3d75 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(44, 90, 160, 0.3);
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 12px 30px rgba(44, 90, 160, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-success:hover {
+            box-shadow: 0 12px 30px rgba(40, 167, 69, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #fd7e14 0%, #e36209 100%);
+            color: white;
+            box-shadow: 0 6px 20px rgba(253, 126, 20, 0.3);
+        }
+        
+        /* الجدول */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 30px 0;
+            border: 3px solid #e0e7ff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+        
+        th, td {
+            border: 1px solid #e0e7ff;
+            padding: 18px 15px;
+            text-align: center;
+            font-size: 1rem;
+            min-width: 120px;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1d3d75 100%);
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            font-size: 1.1rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8faff;
+        }
+        
+        tr:hover {
+            background-color: #eef5ff;
+            transform: scale(1.002);
+            transition: transform 0.2s;
+        }
+        
+        .unit-header {
+            background: linear-gradient(135deg, #e7f1ff 0%, #d4e3ff 100%) !important;
+            font-weight: bold;
+            color: #1d3d75;
+            font-size: 1.3rem;
+            padding: 22px 15px;
+        }
+        
+        .data-input {
+            width: 100%;
+            padding: 15px 12px;
+            border: 2px solid #d1d9e6;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            height: 50px;
+            text-align: center;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .data-input:focus {
+            border-color: #2c5aa0;
+            box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.2);
+            outline: none;
+            transform: scale(1.02);
+        }
+        
+        /* البيانات الإضافية */
+        .footer-section {
+            margin-top: 40px;
+            padding: 40px;
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%);
             border-radius: 20px;
-            color: var(--secondary-color);
-            font-size: 0.9rem;
-            animation: pulse 2s infinite;
+            box-shadow: 0 10px 30px rgba(44, 90, 160, 0.1);
         }
         
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+        .section-title-form {
+            background: linear-gradient(135deg, #1d3d75 0%, #2c5aa0 100%);
+            color: white;
+            padding: 25px;
+            margin: 35px 0 25px 0;
+            border-radius: 15px;
+            font-size: 1.4rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
         
-        /* تحسينات للجوال */
-        @media (max-width: 1024px) {
-            .dashboard {
-                grid-template-columns: 1fr;
+        .section-title-form:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            transform: translateX(-100%);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .footer-row {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .footer-col {
+            width: 100%;
+        }
+        
+        .footer-col label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1d3d75;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .notes {
+            margin-top: 30px;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 20px;
+            border: 2px solid #d1d9e6;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            height: 150px;
+            resize: vertical;
+            min-height: 150px;
+            line-height: 1.6;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        textarea:focus {
+            border-color: #2c5aa0;
+            box-shadow: 0 0 0 4px rgba(44, 90, 160, 0.2);
+            outline: none;
+        }
+        
+        /* الإشعارات */
+        .notification {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+            color: white;
+            padding: 25px 45px;
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+            z-index: 10000;
+            animation: slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 400px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        
+        .notification.warning {
+            background: linear-gradient(135deg, #fd7e14 0%, #e36209 100%);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(-50%) translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        /* الفوتر */
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 30px;
+            color: #666;
+            font-size: 1rem;
+            border-top: 3px solid #eef5ff;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        
+        /* شريط التحميل */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #2c5aa0, #26d0ce);
+            transform: translateX(-100%);
+            transition: transform 0.3s;
+            z-index: 10001;
+        }
+        
+        .progress-bar.active {
+            animation: loading 2s ease-in-out infinite;
+        }
+        
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(-50%); }
+            100% { transform: translateX(0%); }
+        }
+        
+        /* التجاوب */
+        @media (min-width: 768px) {
+            .header-info {
+                flex-direction: row;
+                flex-wrap: wrap;
             }
             
-            .sidebar {
-                display: none;
+            .info-item-input {
+                flex: 1;
+                min-width: 250px;
             }
             
-            .sidebar.active {
-                display: flex;
-                position: fixed;
-                top: 0;
-                right: 0;
-                height: 100vh;
-                z-index: 1000;
-                width: 280px;
+            .header-name {
+                flex-direction: row;
+                flex: 2;
+            }
+            
+            .controls {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            
+            .btn-group {
+                flex-wrap: nowrap;
+            }
+            
+            .footer-row {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .footer-col {
+                flex: 1;
+                min-width: 250px;
             }
         }
         
-        @media (max-width: 768px) {
-            .top-bar {
+        @media (max-width: 767px) {
+            .main-header h1 {
+                font-size: 2rem;
+            }
+            
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            }
+            
+            .btn {
+                width: 100%;
+                min-width: auto;
+            }
+            
+            .station-info-bar {
                 flex-direction: column;
-                gap: 15px;
                 text-align: center;
             }
             
-            .stats-grid {
-                grid-template-columns: 1fr;
+            .info-item {
+                min-width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                border-radius: 15px;
+            }
+            
+            .main-header {
+                padding: 20px;
+            }
+            
+            .cards-section,
+            .form-section {
+                padding: 20px;
+            }
+            
+            .station-card {
+                padding: 20px;
+            }
+            
+            .notification {
+                min-width: 90%;
+                padding: 20px;
             }
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- الشريط العلوي -->
-    <div class="top-bar">
-        <div class="logo">
-            <i class="fas fa-water"></i>
-            <h1>نظام محطات الضخ السحابي</h1>
-        </div>
-        
-        <div class="user-info">
-            <div class="realtime-indicator" id="realtimeIndicator">
-                <div class="dot"></div>
-                <span>مباشر</span>
-                <i class="fas fa-broadcast-tower"></i>
-            </div>
-            <div id="connectionStatus" class="alert alert-success">
-                <i class="fas fa-wifi"></i>
-                <span>متصل</span>
-            </div>
-            <div id="userAvatar" class="user-avatar">
-                <i class="fas fa-user"></i>
-            </div>
-        </div>
-    </div>
+    <!-- شريط التحميل -->
+    <div class="progress-bar" id="progressBar"></div>
 
-    <!-- اللوحة الرئيسية -->
-    <div class="dashboard">
-        <!-- القائمة الجانبية -->
-        <div class="sidebar" id="sidebar">
-            <a href="#dashboard" class="nav-item active" data-section="dashboard">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>لوحة التحكم</span>
-            </a>
-            <a href="#stations" class="nav-item" data-section="stations">
-                <i class="fas fa-water-pump"></i>
-                <span>المحطات</span>
-            </a>
-            <a href="#reports" class="nav-item" data-section="reports">
-                <i class="fas fa-chart-bar"></i>
-                <span>التقارير</span>
-            </a>
-            <a href="#users" class="nav-item" data-section="users">
-                <i class="fas fa-users"></i>
-                <span>المستخدمين</span>
-            </a>
-            <a href="#settings" class="nav-item" data-section="settings">
-                <i class="fas fa-cog"></i>
-                <span>الإعدادات</span>
-            </a>
+    <div class="container">
+        <!-- رأس الصفحة -->
+        <div class="main-header">
+            <h1><i class="fas fa-water"></i> نظام سجل محطات الضخ</h1>
+            <p class="subtitle">نظام سحابي متكامل - يعمل على جميع الأجهزة</p>
+            <div class="connection-status" id="connectionStatus">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">جاري الاتصال بقاعدة البيانات...</span>
+            </div>
+        </div>
+
+        <!-- قسم الكروت -->
+        <div class="cards-section active" id="cardsSection">
+            <h2 class="section-title"><i class="fas fa-satellite-dish"></i> المحطات المتاحة</h2>
+            <div class="cards-grid" id="cardsContainer">
+                <!-- الكروت ستتم إضافتها بواسطة JavaScript -->
+            </div>
             
-            <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #eee;">
-                <button class="btn btn-primary" id="addStationBtn" style="width: 100%;">
-                    <i class="fas fa-plus"></i>
-                    إضافة محطة جديدة
+            <div style="text-align: center; margin-top: 40px;">
+                <button class="btn btn-success" id="newStationBtn">
+                    <i class="fas fa-plus-circle"></i> إنشاء محطة جديدة
                 </button>
-                <button class="btn btn-warning" id="syncDataBtn" style="width: 100%; margin-top: 10px;">
-                    <i class="fas fa-sync"></i>
-                    مزامنة البيانات
+                <button class="btn btn-secondary" id="refreshBtn" style="margin-right: 15px;">
+                    <i class="fas fa-sync"></i> تحديث القائمة
                 </button>
             </div>
         </div>
 
-        <!-- المحتوى الرئيسي -->
-        <div class="main-content" id="mainContent">
-            <!-- لوحة التحكم -->
-            <div id="dashboardSection" class="content-section active">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3>عدد المحطات</h3>
-                        <div class="value" id="totalStations">0</div>
-                        <div class="change">+0 هذا الشهر</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>المحطات النشطة</h3>
-                        <div class="value" id="activeStations">0</div>
-                        <div class="change">0% زيادة</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>المستخدمون النشطون</h3>
-                        <div class="value" id="activeUsers">0</div>
-                        <div class="change">+0 اليوم</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>البيانات المحفوظة</h3>
-                        <div class="value" id="dataEntries">0</div>
-                        <div class="change">+0 اليوم</div>
-                    </div>
-                </div>
+        <!-- قسم النموذج -->
+        <div class="form-section" id="formSection">
+            <!-- زر العودة -->
+            <button class="back-btn" id="backBtn">
+                <i class="fas fa-arrow-right"></i> العودة إلى القائمة
+            </button>
 
-                <div class="chart-container">
-                    <canvas id="stationsChart"></canvas>
-                </div>
-
-                <div class="chart-container">
-                    <canvas id="performanceChart"></canvas>
+            <!-- معلومات المحطة -->
+            <div class="station-header">
+                <h2 id="stationTitle"><i class="fas fa-water"></i> محطة جديدة</h2>
+                <div class="station-info-bar">
+                    <div class="info-item">
+                        <label><i class="fas fa-tag"></i> اسم المحطة:</label>
+                        <span id="currentStation">غير محدد</span>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-user"></i> المشغل الحالي:</label>
+                        <span id="currentOperator">غير محدد</span>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-clock"></i> آخر تحديث:</label>
+                        <span id="lastUpdate">غير متوفر</span>
+                    </div>
+                    <div class="info-item">
+                        <label><i class="fas fa-cloud"></i> الحالة:</label>
+                        <span id="syncState">جاهز</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- قسم المحطات -->
-            <div id="stationsSection" class="content-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2>المحطات المتاحة</h2>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="searchStations" placeholder="بحث عن محطة..." style="padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-                        <button class="btn btn-success" id="exportAllBtn">
-                            <i class="fas fa-file-excel"></i>
-                            تصدير الكل
-                        </button>
+            <!-- بيانات المشغل -->
+            <div class="header-info">
+                <div class="info-item-input">
+                    <label><i class="fas fa-tag"></i> اسم المحطة:</label>
+                    <input type="text" id="station-name" class="keyboard-text" placeholder="أدخل اسم المحطة (مثال: S1A)" />
+                </div>
+                <div class="header-name">
+                    <div class="info-item-input">
+                        <label><i class="fas fa-user"></i> اسم المشغل:</label>
+                        <input type="text" id="operator-name" class="keyboard-text" placeholder="أدخل اسم المشغل" />
+                    </div>
+
+                    <div class="info-item-input">
+                        <label><i class="fas fa-calendar"></i> التاريخ:</label>
+                        <input type="date" id="record-date" />
+                    </div>
+
+                    <div class="info-item-input">
+                        <label><i class="fas fa-clock"></i> الوردية:</label>
+                        <select id="shift">
+                            <option value="صباحية">صباحية</option>
+                            <option value="مسائية">مسائية</option>
+                        </select>
                     </div>
                 </div>
+            </div>
 
-                <table class="stations-table" id="stationsTable">
+            <!-- أزرار التحكم -->
+            <div class="controls">
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="addRowBtn">
+                        <i class="fas fa-plus"></i> إضافة وحدة
+                    </button>
+                    <button class="btn btn-secondary" id="resetBtn">
+                        <i class="fas fa-redo"></i> إعادة تعيين
+                    </button>
+                    <button class="btn btn-success" id="saveBtn">
+                        <i class="fas fa-save"></i> حفظ التعديلات
+                    </button>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-success" id="exportBtn">
+                        <i class="fas fa-file-excel"></i> تصدير إلى Excel
+                    </button>
+                    <button class="btn btn-primary" id="printBtn">
+                        <i class="fas fa-print"></i> طباعة
+                    </button>
+                    <button class="btn btn-warning" id="syncBtn">
+                        <i class="fas fa-sync"></i> مزامنة البيانات
+                    </button>
+                </div>
+            </div>
+
+            <!-- الجدول الرئيسي -->
+            <div class="table-container">
+                <table id="pumpTable">
                     <thead>
                         <tr>
-                            <th>رمز المحطة</th>
-                            <th>اسم المحطة</th>
-                            <th>الموقع</th>
-                            <th>الحالة</th>
-                            <th>آخر تحديث</th>
-                            <th>المشغل</th>
-                            <th>الإجراءات</th>
+                            <th rowspan="2">البيان</th>
+                            <th colspan="5">القراءات حسب الوقت</th>
+                        </tr>
+                        <tr>
+                            <th>6:00 ص</th>
+                            <th>11:00 ص</th>
+                            <th>4:00 م</th>
+                            <th>9:00 م</th>
+                            <th>2:00 ص</th>
                         </tr>
                     </thead>
-                    <tbody id="stationsTableBody">
-                        <!-- سيتم تعبئتها بالبيانات -->
+                    <tbody id="tableBody">
+                        <!-- البيانات ستتم إضافتها بواسطة JavaScript -->
                     </tbody>
                 </table>
             </div>
 
-            <!-- التقارير -->
-            <div id="reportsSection" class="content-section">
-                <h2>التقارير والإحصائيات</h2>
-                <div style="margin: 20px 0;">
-                    <button class="btn btn-primary" id="generateDailyReport">
-                        <i class="fas fa-calendar-day"></i>
-                        تقرير يومي
-                    </button>
-                    <button class="btn btn-success" id="generateMonthlyReport">
-                        <i class="fas fa-calendar-alt"></i>
-                        تقرير شهري
-                    </button>
-                    <button class="btn btn-warning" id="generatePerformanceReport">
-                        <i class="fas fa-chart-line"></i>
-                        تقرير الأداء
-                    </button>
+            <!-- البيانات الإضافية -->
+            <div class="footer-section">
+                <div class="section-title-form">
+                    <i class="fas fa-tachometer-alt"></i> منظومة الطرق المائي و ضاغط الهواء
+                </div>
+
+                <div class="footer-row">
+                    <div class="footer-col">
+                        <label><i class="fas fa-road"></i> الطرق المائي:</label>
+                        <input type="text" id="waterPath" class="keyboard-text" placeholder="أدخل حالة الطرق المائي" />
+                    </div>
+                    <div class="footer-col">
+                        <label><i class="fas fa-water"></i> مستوي المياه بالخزان الأول:</label>
+                        <input type="text" id="tank1Level" class="keyboard-text" placeholder="أدخل المستوي" />
+                    </div>
+                    <div class="footer-col">
+                        <label><i class="fas fa-water"></i> مستوي المياه بالخزان الثاني:</label>
+                        <input type="text" id="tank2Level" class="keyboard-text" placeholder="أدخل المستوي" />
+                    </div>
+                </div>
+
+                <div class="footer-row">
+                    <div class="footer-col">
+                        <label><i class="fas fa-water"></i> مستوي المياه بالخزان الثالث:</label>
+                        <input type="text" id="tank3Level" class="keyboard-text" placeholder="أدخل المستوي" />
+                    </div>
+                    <div class="footer-col">
+                        <label><i class="fas fa-oil-can"></i> الضاغط الأول / درجة الحرارة:</label>
+                        <input type="text" id="compressor1" class="keyboard-text" placeholder="مثال: جيد / 45°C" />
+                    </div>
+                    <div class="footer-col">
+                        <label><i class="fas fa-oil-can"></i> الضاغط الثاني / درجة الحرارة:</label>
+                        <input type="text" id="compressor2" class="keyboard-text" placeholder="مثال: جيد / 42°C" />
+                    </div>
+                </div>
+
+                <div class="section-title-form">
+                    <i class="fas fa-tachometer-alt"></i> منظومة التحضير
+                </div>
+
+                <div class="footer-col" style="width: 100%;">
+                    <label><i class="fas fa-compress-arrows-alt"></i> مستوي الزيت بالضاغط / درجة الحرارة:</label>
+                    <input type="text" id="com" class="keyboard-text" placeholder="أدخل القراءة" />
+                </div>
+
+                <div class="section-title-form">
+                    <i class="fas fa-clock"></i> مواعيد التشغيل \ الإيقاف للمحطة
+                </div>
+
+                <div class="footer-row">
+                    <div class="footer-col">
+                        <label><i class="fas fa-play-circle"></i> توقيت تشغيل المحطة:</label>
+                        <input type="time" id="startTime" value="06:00" />
+                    </div>
+                    <div class="footer-col">
+                        <label><i class="fas fa-stop-circle"></i> توقيت إيقاف المحطة:</label>
+                        <input type="time" id="endTime" value="24:00" />
+                    </div>
+                    <div class="footer-col">
+                        <label><i class="fas fa-clock"></i> عدد ساعات التشغيل:</label>
+                        <input type="text" id="totalHours" class="keyboard-number" placeholder="سيتم حسابه تلقائياً" readonly />
+                    </div>
+                </div>
+
+                <div class="notes">
+                    <label><i class="fas fa-sticky-note"></i> ملاحظات اليوم:</label>
+                    <textarea id="dailyNotes" class="keyboard-text" placeholder="أدخل أي ملاحظات هامة عن تشغيل المحطة اليوم..."></textarea>
                 </div>
             </div>
 
-            <!-- المستخدمين -->
-            <div id="usersSection" class="content-section">
-                <h2>إدارة المستخدمين</h2>
-                <div id="usersList"></div>
-            </div>
-
-            <!-- الإعدادات -->
-            <div id="settingsSection" class="content-section">
-                <h2>إعدادات النظام</h2>
-                <div class="form-group">
-                    <label>مفتاح Supabase</label>
-                    <input type="password" id="supabaseKey" placeholder="أدخل مفتاح API">
-                </div>
-                <button class="btn btn-primary" id="saveSettings">حفظ الإعدادات</button>
+            <!-- الفوتر -->
+            <div class="footer">
+                <p>نظام سجل محطات الضخ السحابي © 2024 - يعمل على جميع الأجهزة</p>
+                <p>تم التطوير باستخدام Supabase - قاعدة بيانات سحابية متكاملة</p>
             </div>
         </div>
     </div>
 
-    <!-- نموذج إضافة محطة -->
-    <div class="modal" id="addStationModal">
-        <div class="modal-content">
-            <h2 style="margin-bottom: 20px;">إضافة محطة جديدة</h2>
-            <form id="stationForm">
-                <div class="form-group">
-                    <label>رمز المحطة</label>
-                    <input type="text" id="stationCode" required>
-                </div>
-                <div class="form-group">
-                    <label>اسم المحطة</label>
-                    <input type="text" id="stationName" required>
-                </div>
-                <div class="form-group">
-                    <label>الموقع</label>
-                    <input type="text" id="stationLocation" required>
-                </div>
-                <div class="form-group">
-                    <label>الحالة</label>
-                    <select id="stationStatus" required>
-                        <option value="online">نشطة</option>
-                        <option value="offline">غير نشطة</option>
-                        <option value="maintenance">صيانة</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>ملاحظات</label>
-                    <textarea id="stationNotes" rows="3"></textarea>
-                </div>
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-success">حفظ</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- نموذج تعديل محطة -->
-    <div class="modal" id="editStationModal">
-        <div class="modal-content">
-            <h2 style="margin-bottom: 20px;">تعديل محطة</h2>
-            <form id="editStationForm">
-                <input type="hidden" id="editStationId">
-                <!-- نفس حقول الإضافة -->
-            </form>
-        </div>
-    </div>
+    <!-- مكتبات JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <script>
-        // ========== تكوين Supabase ==========
+        // ========== بيانات Supabase ==========
         const SUPABASE_URL = 'https://gjzjltdodzlhpcgekhcc.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqempsdGRvZHpsaHBjZ2VraGNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE2OTY5MzIsImV4cCI6MjA0NzI3MjkzMn0.Xwf7XupO6M93M2LwRnIN9Q_KUz2o2Ot';
         
         let supabase = null;
-        let currentUser = null;
-        let realtimeSubscription = null;
+        let currentStation = '';
+        let isOnline = false;
+        let stationDataCache = {};
 
-        // ========== تهيئة التطبيق ==========
-        async function initApp() {
-            console.log('🚀 بدء تهيئة النظام...');
+        // ========== البيانات الأساسية ==========
+        const pumpUnits = [
+            {
+                name: "معلومات",
+                items: [
+                    { name: "المنسوب", id: "level1", unit: "سم", inputType: "mixed", placeholder: "أدخل المنسوب" },
+                    { name: "قراءة عداد الطاقة", id: "energy1", unit: "ك.و.س", inputType: "number", placeholder: "أدخل القراءة" },
+                    { name: "قراءة عداد الطاقة ٢", id: "energy2", unit: "ك.و.س", inputType: "number", placeholder: "أدخل القراءة" },
+                    { name: "الجهد", id: "voltage1", unit: "فولت", inputType: "number", placeholder: "أدخل الجهد" },
+                    { name: "الضغط", id: "daght", unit: "بار", inputType: "number", placeholder: "أدخل الضغط" }
+                ]
+            },
+            {
+                name: "الوحدة رقم ١",
+                type: "unit",
+                unitNumber: 1,
+                items: [
+                    { name: "إجمالي عدد الساعات", id: "totalHours1", unit: "ساعة", inputType: "number", placeholder: "أدخل الساعات" },
+                    { name: "فتحة محبس الطرد (%)", id: "valve1", unit: "%", inputType: "number", placeholder: "أدخل النسبة" },
+                    { name: "ضغط سحب المضخة", id: "suction1", unit: "بار", inputType: "number", placeholder: "أدخل الضغط" },
+                    { name: "ضغط طرد المضخة", id: "discharge1", unit: "بار", inputType: "number", placeholder: "أدخل الضغط" },
+                    { name: "حالة حرارة كرسي التحميل", id: "bearing1", unit: "°C", inputType: "mixed", placeholder: "أدخل الحرارة" },
+                    { name: "حالة الحشو", id: "seal1", unit: "", inputType: "text", placeholder: "أدخل الحالة" },
+                    { name: "درجة حرارة الموتور", id: "motorTemp1", unit: "", inputType: "mixed", placeholder: "أدخل الحرارة" },
+                    { name: "شدة تيار الموتور", id: "motorCurrent1", unit: "أمبير", inputType: "number", placeholder: "أدخل التيار" }
+                ]
+            },
+            {
+                name: "الوحدة رقم ٢",
+                type: "unit",
+                unitNumber: 2,
+                items: [
+                    { name: "إجمالي عدد الساعات", id: "totalHours2", unit: "ساعة", inputType: "number", placeholder: "أدخل الساعات" },
+                    { name: "فتحة محبس الطرد (%)", id: "valve2", unit: "%", inputType: "number", placeholder: "أدخل النسبة" },
+                    { name: "ضغط سحب المضخة", id: "suction2", unit: "بار", inputType: "number", placeholder: "أدخل الضغط" },
+                    { name: "ضغط طرد المضخة", id: "discharge2", unit: "بار", inputType: "number", placeholder: "أدخل الضغط" },
+                    { name: "حالة حرارة كرسي التحميل", id: "bearing2", unit: "°C", inputType: "mixed", placeholder: "أدخل الحرارة" },
+                    { name: "حالة الحشو", id: "seal2", unit: "", inputType: "text", placeholder: "أدخل الحالة" },
+                    { name: "درجة حرارة الموتور", id: "motorTemp2", unit: "", inputType: "mixed", placeholder: "أدخل الحرارة" },
+                    { name: "شدة تيار الموتور", id: "motorCurrent2", unit: "أمبير", inputType: "number", placeholder: "أدخل التيار" }
+                ]
+            }
+        ];
+
+        const timeSlots = ["6:00", "11:00", "16:00", "21:00", "2:00"];
+
+        const stationCards = [
+            { id: "S1A", name: "المحطة الرئيسية A", icon: "fa-water", description: "محطة الضخ الرئيسية - المنطقة A" },
+            { id: "S1B", name: "المحطة الرئيسية B", icon: "fa-water", description: "محطة الضخ الرئيسية - المنطقة B" },
+            { id: "S3", name: "محطة المنطقة 3", icon: "fa-water", description: "محطة فرعية - المنطقة 3" },
+            { id: "S4", name: "محطة المنطقة 4", icon: "fa-water", description: "محطة فرعية - المنطقة 4" },
+            { id: "S5A", name: "المحطة الفرعية 5A", icon: "fa-tint", description: "محطة توزيع - المنطقة 5A" },
+            { id: "S5B", name: "المحطة الفرعية 5B", icon: "fa-tint", description: "محطة توزيع - المنطقة 5B" },
+            { id: "S6", name: "محطة المنطقة 6", icon: "fa-water", description: "محطة فرعية - المنطقة 6" },
+            { id: "S7A", name: "المحطة الفرعية 7A", icon: "fa-tint", description: "محطة توزيع - المنطقة 7A" },
+            { id: "S7B", name: "المحطة الفرعية 7B", icon: "fa-tint", description: "محطة توزيع - المنطقة 7B" },
+            { id: "S8", name: "محطة المنطقة 8", icon: "fa-water", description: "محطة فرعية - المنطقة 8" },
+            { id: "S9A", name: "المحطة الفرعية 9A", icon: "fa-tint", description: "محطة توزيع - المنطقة 9A" },
+            { id: "S9B", name: "المحطة الفرعية 9B", icon: "fa-tint", description: "محطة توزيع - المنطقة 9B" },
+            { id: "S9C", name: "المحطة الفرعية 9C", icon: "fa-tint", description: "محطة توزيع - المنطقة 9C" },
+            { id: "S9D", name: "المحطة الفرعية 9D", icon: "fa-tint", description: "محطة توزيع - المنطقة 9D" },
+            { id: "S9E", name: "المحطة الفرعية 9E", icon: "fa-tint", description: "محطة توزيع - المنطقة 9E" },
+            { id: "S9F", name: "المحطة الفرعية 9F", icon: "fa-tint", description: "محطة توزيع - المنطقة 9F" }
+        ];
+
+        // ========== الدوال الأساسية ==========
+
+        // إظهار شريط التحميل
+        function showProgress() {
+            const progressBar = document.getElementById('progressBar');
+            progressBar.classList.add('active');
+        }
+
+        // إخفاء شريط التحميل
+        function hideProgress() {
+            const progressBar = document.getElementById('progressBar');
+            progressBar.classList.remove('active');
+        }
+
+        // إظهار إشعار
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                type === 'warning' ? 'exclamation-triangle' : 
+                                'times-circle'}"></i>
+                <span>${message}</span>
+            `;
             
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) reverse';
+                setTimeout(() => notification.remove(), 500);
+            }, 4000);
+        }
+
+        // تحديث حالة الاتصال
+        function updateConnectionStatus(connected) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            if (connected) {
+                statusDot.classList.remove('offline');
+                statusText.textContent = 'متصل بقاعدة البيانات السحابية';
+                document.getElementById('syncState').textContent = 'متصل';
+                isOnline = true;
+            } else {
+                statusDot.classList.add('offline');
+                statusText.textContent = 'غير متصل - وضع عدم الاتصال';
+                document.getElementById('syncState').textContent = 'غير متصل';
+                isOnline = false;
+            }
+        }
+
+        // ========== نظام Supabase ==========
+
+        // تهيئة Supabase
+        async function initializeSupabase() {
             try {
-                // تهيئة Supabase
                 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 
                 // اختبار الاتصال
-                const { data: { session }, error } = await supabase.auth.getSession();
+                const { data, error } = await supabase.from('stations').select('count').limit(1);
                 
                 if (error) {
-                    console.error('❌ خطأ في الاتصال:', error);
-                    showError('خطأ في الاتصال بقاعدة البيانات');
-                    return;
+                    throw error;
                 }
                 
-                console.log('✅ تم الاتصال بنجاح');
-                
-                // تهيئة المستخدم
-                if (session?.user) {
-                    currentUser = session.user;
-                    updateUserInfo();
-                } else {
-                    // مستخدم مجهول (يمكن تعديل هذا لاحقاً لإضافة تسجيل دخول)
-                    currentUser = {
-                        id: 'anonymous',
-                        email: 'زائر',
-                        name: 'مستخدم جديد'
-                    };
-                }
-                
-                // تحديث واجهة المستخدم
                 updateConnectionStatus(true);
-                
-                // تحميل البيانات الأولية
-                await loadInitialData();
-                
-                // بدء المزامنة في الوقت الحقيقي
-                startRealtimeSync();
-                
-                // إعداد الرسوم البيانية
-                initCharts();
-                
-                console.log('✅ النظام جاهز للاستخدام');
-                showSuccess('تم تهيئة النظام بنجاح');
-                
-            } catch (error) {
-                console.error('❌ خطأ في التهيئة:', error);
-                showError('فشل في تهيئة النظام');
-            }
-        }
-
-        // ========== إدارة المحطات ==========
-        let stations = [];
-        let stationData = {};
-
-        async function loadInitialData() {
-            console.log('📥 جاري تحميل البيانات...');
-            
-            try {
-                // تحميل المحطات
-                const { data: stationsData, error: stationsError } = await supabase
-                    .from('stations')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (stationsError) throw stationsError;
-                
-                stations = stationsData || [];
-                updateStationsTable();
-                updateDashboardStats();
-                
-                console.log(`✅ تم تحميل ${stations.length} محطة`);
-                
-                // تحميل بيانات المستخدمين النشطين
-                updateActiveUsers();
-                
-            } catch (error) {
-                console.error('❌ خطأ في تحميل البيانات:', error);
-                showError('فشل في تحميل البيانات');
-            }
-        }
-
-        function updateStationsTable() {
-            const tbody = document.getElementById('stationsTableBody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = '';
-            
-            stations.forEach(station => {
-                const row = document.createElement('tr');
-                
-                // تنسيق الحالة
-                let statusBadge = '';
-                let statusText = '';
-                
-                switch(station.status) {
-                    case 'online':
-                        statusBadge = 'status-online';
-                        statusText = 'نشطة';
-                        break;
-                    case 'offline':
-                        statusBadge = 'status-offline';
-                        statusText = 'غير نشطة';
-                        break;
-                    case 'maintenance':
-                        statusBadge = 'status-maintenance';
-                        statusText = 'صيانة';
-                        break;
-                }
-                
-                // تنسيق التاريخ
-                const lastUpdated = station.updated_at ? 
-                    new Date(station.updated_at).toLocaleDateString('ar-SA') : 
-                    'غير متوفر';
-                
-                row.innerHTML = `
-                    <td><strong>${station.code}</strong></td>
-                    <td>${station.name}</td>
-                    <td>${station.location || 'غير محدد'}</td>
-                    <td><span class="status-badge ${statusBadge}">${statusText}</span></td>
-                    <td>${lastUpdated}</td>
-                    <td>${station.last_operator || 'غير محدد'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="viewStation('${station.id}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn btn-sm btn-warning" onclick="editStation('${station.id}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteStation('${station.id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                
-                tbody.appendChild(row);
-            });
-        }
-
-        async function addStation(stationData) {
-            try {
-                console.log('➕ إضافة محطة جديدة:', stationData);
-                
-                const { data, error } = await supabase
-                    .from('stations')
-                    .insert([{
-                        code: stationData.code,
-                        name: stationData.name,
-                        location: stationData.location,
-                        status: stationData.status,
-                        notes: stationData.notes,
-                        created_by: currentUser.email,
-                        last_operator: currentUser.email,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }])
-                    .select();
-                
-                if (error) throw error;
-                
-                console.log('✅ تمت إضافة المحطة بنجاح');
-                showSuccess('تمت إضافة المحطة بنجاح');
-                
-                // إعادة تحميل البيانات
-                await loadInitialData();
-                
-                // إغلاق النموذج
-                closeModal();
-                
-                return data[0];
-                
-            } catch (error) {
-                console.error('❌ خطأ في إضافة المحطة:', error);
-                showError('فشل في إضافة المحطة');
-                return null;
-            }
-        }
-
-        async function updateStation(id, stationData) {
-            try {
-                console.log('✏️ تحديث المحطة:', id, stationData);
-                
-                const { error } = await supabase
-                    .from('stations')
-                    .update({
-                        name: stationData.name,
-                        location: stationData.location,
-                        status: stationData.status,
-                        notes: stationData.notes,
-                        last_operator: currentUser.email,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', id);
-                
-                if (error) throw error;
-                
-                console.log('✅ تم تحديث المحطة بنجاح');
-                showSuccess('تم تحديث المحطة بنجاح');
-                
-                // إعادة تحميل البيانات
-                await loadInitialData();
-                
+                showNotification('تم الاتصال بقاعدة البيانات السحابية', 'success');
                 return true;
                 
             } catch (error) {
-                console.error('❌ خطأ في تحديث المحطة:', error);
-                showError('فشل في تحديث المحطة');
+                console.error('Supabase initialization error:', error);
+                updateConnectionStatus(false);
+                showNotification('تم التهيئة مع وضع عدم الاتصال', 'warning');
                 return false;
             }
         }
 
-        async function deleteStation(id) {
-            if (!confirm('⚠️ هل أنت متأكد من حذف هذه المحطة؟')) {
-                return;
+        // حفظ البيانات إلى Supabase
+        async function saveToSupabase(stationName, data) {
+            if (!supabase || !isOnline) {
+                console.log('Not connected to Supabase');
+                return false;
             }
             
+            showProgress();
+            
             try {
-                console.log('🗑️ حذف المحطة:', id);
-                
-                const { error } = await supabase
+                // التحقق من وجود المحطة
+                const { data: existing } = await supabase
                     .from('stations')
-                    .delete()
-                    .eq('id', id);
+                    .select('*')
+                    .eq('station_id', stationName)
+                    .single();
+                
+                if (existing) {
+                    // تحديث البيانات
+                    const { error } = await supabase
+                        .from('stations')
+                        .update({
+                            station_data: data,
+                            updated_at: new Date().toISOString(),
+                            updated_by: data.operator
+                        })
+                        .eq('station_id', stationName);
+                    
+                    if (error) throw error;
+                } else {
+                    // إضافة جديدة
+                    const { error } = await supabase
+                        .from('stations')
+                        .insert({
+                            station_id: stationName,
+                            station_name: data.station,
+                            station_data: data,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                            created_by: data.operator
+                        });
+                    
+                    if (error) throw error;
+                }
+                
+                hideProgress();
+                return true;
+                
+            } catch (error) {
+                console.error('Supabase save error:', error);
+                hideProgress();
+                return false;
+            }
+        }
+
+        // تحميل البيانات من Supabase
+        async function loadFromSupabase(stationName) {
+            if (!supabase || !isOnline) {
+                console.log('Not connected to Supabase');
+                return null;
+            }
+            
+            showProgress();
+            
+            try {
+                const { data, error } = await supabase
+                    .from('stations')
+                    .select('*')
+                    .eq('station_id', stationName)
+                    .single();
+                
+                hideProgress();
                 
                 if (error) throw error;
-                
-                console.log('✅ تم حذف المحطة بنجاح');
-                showSuccess('تم حذف المحطة بنجاح');
-                
-                // إعادة تحميل البيانات
-                await loadInitialData();
+                return data ? data.station_data : null;
                 
             } catch (error) {
-                console.error('❌ خطأ في حذف المحطة:', error);
-                showError('فشل في حذف المحطة');
-            }
-        }
-
-        // ========== المزامنة في الوقت الحقيقي ==========
-        function startRealtimeSync() {
-            console.log('🔄 بدء المزامنة في الوقت الحقيقي...');
-            
-            // الاشتراك في تغييرات جدول المحطات
-            realtimeSubscription = supabase
-                .channel('stations-channel')
-                .on('postgres_changes', 
-                    { event: '*', schema: 'public', table: 'stations' }, 
-                    async (payload) => {
-                        console.log('🔄 تغيير في الوقت الحقيقي:', payload);
-                        
-                        // إعادة تحميل البيانات
-                        await loadInitialData();
-                        
-                        // إظهار تنبيه
-                        showNotification('تم تحديث البيانات');
-                    }
-                )
-                .subscribe();
-            
-            console.log('✅ بدأت المزامنة في الوقت الحقيقي');
-        }
-
-        // ========== الرسوم البيانية ==========
-        function initCharts() {
-            // رسم بياني للمحطات
-            const stationsCtx = document.getElementById('stationsChart').getContext('2d');
-            new Chart(stationsCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-                    datasets: [{
-                        label: 'عدد المحطات',
-                        data: [12, 19, 3, 5, 2, 3],
-                        backgroundColor: 'rgba(26, 115, 232, 0.2)',
-                        borderColor: 'rgba(26, 115, 232, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-            
-            // رسم بياني للأداء
-            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
-            new Chart(performanceCtx, {
-                type: 'line',
-                data: {
-                    labels: ['6:00', '9:00', '12:00', '15:00', '18:00', '21:00', '00:00'],
-                    datasets: [{
-                        label: 'أداء المحطات',
-                        data: [65, 59, 80, 81, 56, 55, 40],
-                        borderColor: 'rgba(52, 168, 83, 1)',
-                        backgroundColor: 'rgba(52, 168, 83, 0.1)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true
-                }
-            });
-        }
-
-        // ========== تحديث الإحصائيات ==========
-        function updateDashboardStats() {
-            document.getElementById('totalStations').textContent = stations.length;
-            
-            const activeCount = stations.filter(s => s.status === 'online').length;
-            document.getElementById('activeStations').textContent = activeCount;
-            
-            // يمكن إضافة المزيد من الإحصائيات هنا
-        }
-
-        async function updateActiveUsers() {
-            // هذا مثال - يمكن تطويره ليشمل نظام المستخدمين الحقيقي
-            document.getElementById('activeUsers').textContent = '1'; // حالياً مستخدم واحد
-        }
-
-        // ========== إدارة النماذج والنوافذ المنبثقة ==========
-        function openAddStationModal() {
-            document.getElementById('addStationModal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('addStationModal').classList.remove('active');
-            document.getElementById('editStationModal').classList.remove('active');
-        }
-
-        // ========== إدارة التنبيهات ==========
-        function showSuccess(message) {
-            showNotification(message, 'success');
-        }
-
-        function showError(message) {
-            showNotification(message, 'error');
-        }
-
-        function showNotification(message, type = 'info') {
-            // يمكن تحسين هذا ليظهر تنبيهات جميلة
-            alert(`${type === 'success' ? '✅' : '❌'} ${message}`);
-        }
-
-        function updateConnectionStatus(connected) {
-            const statusElement = document.getElementById('connectionStatus');
-            if (connected) {
-                statusElement.className = 'alert alert-success';
-                statusElement.innerHTML = '<i class="fas fa-wifi"></i><span>متصل</span>';
-            } else {
-                statusElement.className = 'alert alert-error';
-                statusElement.innerHTML = '<i class="fas fa-wifi-slash"></i><span>غير متصل</span>';
-            }
-        }
-
-        function updateUserInfo() {
-            const avatar = document.getElementById('userAvatar');
-            if (currentUser?.email) {
-                const initials = currentUser.email.charAt(0).toUpperCase();
-                avatar.textContent = initials;
-            }
-        }
-
-        // ========== تصدير البيانات ==========
-        async function exportToExcel() {
-            try {
-                console.log('📊 تصدير البيانات إلى Excel...');
-                
-                const wsData = [
-                    ['تقرير محطات الضخ', new Date().toLocaleDateString('ar-SA')],
-                    [],
-                    ['رمز المحطة', 'اسم المحطة', 'الموقع', 'الحالة', 'آخر تحديث', 'المشغل']
-                ];
-                
-                stations.forEach(station => {
-                    wsData.push([
-                        station.code,
-                        station.name,
-                        station.location || '',
-                        station.status === 'online' ? 'نشطة' : 'غير نشطة',
-                        station.updated_at ? new Date(station.updated_at).toLocaleDateString('ar-SA') : '',
-                        station.last_operator || ''
-                    ]);
-                });
-                
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet(wsData);
-                
-                XLSX.utils.book_append_sheet(wb, ws, 'المحطات');
-                
-                const fileName = `محطات_الضخ_${new Date().toISOString().split('T')[0]}.xlsx`;
-                XLSX.writeFile(wb, fileName);
-                
-                console.log('✅ تم التصدير بنجاح');
-                showSuccess('تم تصدير البيانات بنجاح');
-                
-            } catch (error) {
-                console.error('❌ خطأ في التصدير:', error);
-                showError('فشل في تصدير البيانات');
-            }
-        }
-
-        // ========== التعامل مع الأحداث ==========
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('📄 الصفحة جاهزة');
-            
-            // تهيئة التطبيق
-            initApp();
-            
-            // إضافة محطة جديدة
-            document.getElementById('addStationBtn').addEventListener('click', openAddStationModal);
-            
-            // نموذج إضافة محطة
-            document.getElementById('stationForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const stationData = {
-                    code: document.getElementById('stationCode').value,
-                    name: document.getElementById('stationName').value,
-                    location: document.getElementById('stationLocation').value,
-                    status: document.getElementById('stationStatus').value,
-                    notes: document.getElementById('stationNotes').value
-                };
-                
-                await addStation(stationData);
-            });
-            
-            // تصدير البيانات
-            document.getElementById('exportAllBtn').addEventListener('click', exportToExcel);
-            
-            // مزامنة البيانات
-            document.getElementById('syncDataBtn').addEventListener('click', async () => {
-                console.log('🔄 مزامنة البيانات...');
-                showNotification('جاري مزامنة البيانات...');
-                await loadInitialData();
-                showSuccess('تمت مزامنة البيانات بنجاح');
-            });
-            
-            // التنقل بين الأقسام
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    
-                    // إزالة النشاط من جميع العناصر
-                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-                    
-                    // إضافة النشاط للعنصر المحدد
-                    item.classList.add('active');
-                    
-                    const section = item.getAttribute('data-section');
-                    document.getElementById(`${section}Section`).classList.add('active');
-                });
-            });
-            
-            // بحث المحطات
-            document.getElementById('searchStations').addEventListener('input', (e) => {
-                const searchTerm = e.target.value.toLowerCase();
-                // يمكن إضافة وظيفة البحث هنا
-            });
-        });
-
-        // ========== وظائف عامة للاستخدام ==========
-        window.viewStation = function(stationId) {
-            console.log('👀 عرض المحطة:', stationId);
-            alert(`عرض المحطة ${stationId} - هذه الميزة قيد التطوير`);
-        };
-
-        window.editStation = function(stationId) {
-            console.log('✏️ تعديل المحطة:', stationId);
-            // هنا يمكن فتح نموذج التعديل
-            alert(`تعديل المحطة ${stationId} - هذه الميزة قيد التطوير`);
-        };
-
-        window.deleteStation = function(stationId) {
-            console.log('🗑️ حذف المحطة:', stationId);
-            // سيتم استدعاء دالة الحذف
-            deleteStation(stationId);
-        };
-
-        window.closeModal = closeModal;
-
-        // ========== التعامل مع تغيير الاتصال ==========
-        window.addEventListener('online', () => {
-            console.log('🌐 تم استعادة الاتصال بالإنترنت');
-            updateConnectionStatus(true);
-            showSuccess('تم استعادة الاتصال بالإنترنت');
-            loadInitialData();
-        });
-
-        window.addEventListener('offline', () => {
-            console.log('📴 فقد الاتصال بالإنترنت');
-            updateConnectionStatus(false);
-            showError('فقد الاتصال بالإنترنت - الوضع غير متصل');
-        });
-
-        // ========== إدارة الذاكرة المحلية ==========
-        function saveToLocalStorage(key, data) {
-            try {
-                localStorage.setItem(key, JSON.stringify(data));
-            } catch (error) {
-                console.error('❌ خطأ في حفظ البيانات محلياً:', error);
-            }
-        }
-
-        function loadFromLocalStorage(key) {
-            try {
-                const data = localStorage.getItem(key);
-                return data ? JSON.parse(data) : null;
-            } catch (error) {
-                console.error('❌ خطأ في تحميل البيانات المحلية:', error);
+                console.error('Supabase load error:', error);
+                hideProgress();
                 return null;
             }
         }
 
-        console.log('✅ تم تحميل النظام بالكامل');
+        // تحميل قائمة المحطات من Supabase
+        async function loadStationsFromSupabase() {
+            if (!supabase || !isOnline) return;
+            
+            try {
+                const { data, error } = await supabase
+                    .from('stations')
+                    .select('station_id, station_name, updated_at, updated_by')
+                    .order('updated_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                // تحديث حالة الكروت
+                if (data) {
+                    data.forEach(station => {
+                        const statusEl = document.querySelector(`#status-${station.station_id}`);
+                        if (statusEl) {
+                            statusEl.classList.add('online');
+                        }
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error loading stations:', error);
+            }
+        }
+
+        // ========== نظام الكروت ==========
+
+        // إنشاء كروت المحطات
+        function generateStationCards() {
+            const cardsContainer = document.getElementById('cardsContainer');
+            cardsContainer.innerHTML = '';
+
+            stationCards.forEach(station => {
+                const card = document.createElement('div');
+                card.className = 'station-card';
+                card.dataset.id = station.id;
+                
+                card.innerHTML = `
+                    <div class="station-status" id="status-${station.id}"></div>
+                    <div class="station-icon">
+                        <i class="fas ${station.icon}"></i>
+                    </div>
+                    <div class="station-id">${station.id}</div>
+                    <div class="station-name">${station.name}</div>
+                    <div class="station-desc">${station.description}</div>
+                    <div style="margin-top: 15px; font-size: 0.9rem; color: #888;">
+                        <i class="fas fa-mouse-pointer"></i> انقر لفتح المحطة
+                    </div>
+                `;
+
+                card.addEventListener('click', () => {
+                    openStationForm(station.id);
+                });
+
+                cardsContainer.appendChild(card);
+            });
+
+            // تحميل حالة المحطات من السحابة
+            loadStationsFromSupabase();
+        }
+
+        // فتح نموذج المحطة
+        function openStationForm(stationId) {
+            currentStation = stationId;
+            
+            // تحديث واجهة المحطة
+            document.getElementById('stationTitle').innerHTML = `<i class="fas fa-water"></i> محطة ${stationId}`;
+            document.getElementById('currentStation').textContent = stationId;
+            document.getElementById('station-name').value = stationId;
+            
+            // التحويل إلى قسم النموذج
+            document.getElementById('cardsSection').classList.remove('active');
+            document.getElementById('formSection').classList.add('active');
+            
+            // توليد الجدول
+            generateTable();
+            
+            // تحميل البيانات
+            loadStationData();
+            
+            showNotification(`تم فتح محطة ${stationId}`, 'success');
+        }
+
+        // العودة إلى الكروت
+        function backToCards() {
+            document.getElementById('formSection').classList.remove('active');
+            document.getElementById('cardsSection').classList.add('active');
+            currentStation = '';
+        }
+
+        // ========== توليد الجدول ==========
+
+        function generateTable() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+
+            const sortedUnits = [...pumpUnits];
+            sortedUnits.sort((a, b) => {
+                if (a.name === "معلومات") return -1;
+                if (b.name === "معلومات") return 1;
+                if (a.unitNumber && b.unitNumber) {
+                    return a.unitNumber - b.unitNumber;
+                }
+                return 0;
+            });
+
+            sortedUnits.forEach((unit) => {
+                const unitHeaderRow = document.createElement("tr");
+                const unitHeaderCell = document.createElement("td");
+                unitHeaderCell.colSpan = 6;
+                unitHeaderCell.textContent = unit.name;
+                unitHeaderCell.className = "unit-header";
+                unitHeaderRow.appendChild(unitHeaderCell);
+                tableBody.appendChild(unitHeaderRow);
+
+                unit.items.forEach((item) => {
+                    const row = document.createElement("tr");
+
+                    const nameCell = document.createElement("td");
+                    nameCell.textContent = item.name;
+                    row.appendChild(nameCell);
+
+                    timeSlots.forEach((time, timeIndex) => {
+                        const inputCell = document.createElement("td");
+                        const input = document.createElement("input");
+
+                        if (item.inputType === "number") {
+                            input.type = "number";
+                            input.inputMode = "decimal";
+                            input.className = "data-input keyboard-number";
+                            input.step = "0.01";
+                        } else {
+                            input.type = "text";
+                            input.inputMode = "text";
+                            input.className = "data-input keyboard-text";
+                        }
+
+                        input.placeholder = item.placeholder;
+                        input.id = `${item.id}_${timeIndex}`;
+                        input.setAttribute("data-unit", item.unit || "");
+                        input.setAttribute("data-item-name", item.name);
+                        input.setAttribute("data-time-slot", time);
+                        input.setAttribute("autocomplete", "off");
+
+                        inputCell.appendChild(input);
+                        row.appendChild(inputCell);
+                    });
+
+                    tableBody.appendChild(row);
+                });
+            });
+        }
+
+        // ========== نظام الحفظ والتحميل ==========
+
+        // تحميل بيانات المحطة
+        async function loadStationData() {
+            if (!currentStation) {
+                showNotification('لم يتم تحديد محطة', 'warning');
+                return;
+            }
+            
+            showProgress();
+            
+            try {
+                let data = null;
+                
+                // أولاً: حاول التحميل من Supabase
+                if (isOnline) {
+                    data = await loadFromSupabase(currentStation);
+                }
+                
+                // ثانياً: إذا لم توجد على السحابة، جرب localStorage
+                if (!data) {
+                    data = loadFromLocalStorage(currentStation);
+                }
+                
+                // ثالثاً: إذا لم توجد محلياً، جرب الكاش
+                if (!data) {
+                    data = stationDataCache[currentStation];
+                }
+                
+                if (data) {
+                    // تحديث الواجهة
+                    document.getElementById('operator-name').value = data.operator || '';
+                    document.getElementById('record-date').value = data.date || '';
+                    document.getElementById('shift').value = data.shift || 'صباحية';
+                    document.getElementById('currentOperator').textContent = data.operator || 'غير محدد';
+                    
+                    if (data.lastUpdated) {
+                        const date = new Date(data.lastUpdated);
+                        document.getElementById('lastUpdate').textContent = 
+                            date.toLocaleDateString('ar-SA') + ' ' + 
+                            date.toLocaleTimeString('ar-SA');
+                    }
+                    
+                    // تحديث بيانات الجدول
+                    if (data.inputs) {
+                        Object.entries(data.inputs).forEach(([id, value]) => {
+                            const el = document.getElementById(id);
+                            if (el) el.value = value;
+                        });
+                    }
+                    
+                    // تحديث البيانات الإضافية
+                    if (data.additional) {
+                        document.getElementById('waterPath').value = data.additional.waterPath || '';
+                        document.getElementById('tank1Level').value = data.additional.tank1 || '';
+                        document.getElementById('tank2Level').value = data.additional.tank2 || '';
+                        document.getElementById('tank3Level').value = data.additional.tank3 || '';
+                        document.getElementById('compressor1').value = data.additional.comp1 || '';
+                        document.getElementById('compressor2').value = data.additional.comp2 || '';
+                        document.getElementById('com').value = data.additional.com || '';
+                        document.getElementById('startTime').value = data.additional.start || '06:00';
+                        document.getElementById('endTime').value = data.additional.end || '24:00';
+                        document.getElementById('dailyNotes').value = data.additional.notes || '';
+                    }
+                    
+                    // حفظ في الكاش
+                    stationDataCache[currentStation] = data;
+                    
+                    calculateTotalHours();
+                    
+                    showNotification('تم تحميل بيانات المحطة', 'success');
+                    
+                } else {
+                    document.getElementById('currentOperator').textContent = 'غير محدد';
+                    document.getElementById('lastUpdate').textContent = 'غير متوفر';
+                    showNotification('لا توجد بيانات سابقة، ابدأ بإدخال بيانات جديدة', 'info');
+                }
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showNotification('خطأ في تحميل البيانات', 'error');
+            } finally {
+                hideProgress();
+            }
+        }
+
+        // حفظ بيانات المحطة
+        async function saveStationData() {
+            const stationName = document.getElementById('station-name').value.trim();
+            const operator = document.getElementById('operator-name').value.trim();
+            
+            if (!stationName) {
+                showNotification('يرجى إدخال اسم المحطة', 'warning');
+                return;
+            }
+            
+            if (!operator) {
+                showNotification('يرجى إدخال اسم المشغل', 'warning');
+                return;
+            }
+            
+            if (!confirm(`هل تريد حفظ بيانات محطة ${stationName}؟`)) {
+                return;
+            }
+            
+            showProgress();
+            
+            try {
+                // جمع البيانات
+                const data = {
+                    station: stationName,
+                    operator: operator,
+                    date: document.getElementById('record-date').value,
+                    shift: document.getElementById('shift').value,
+                    inputs: {},
+                    additional: {
+                        waterPath: document.getElementById('waterPath').value,
+                        tank1: document.getElementById('tank1Level').value,
+                        tank2: document.getElementById('tank2Level').value,
+                        tank3: document.getElementById('tank3Level').value,
+                        comp1: document.getElementById('compressor1').value,
+                        comp2: document.getElementById('compressor2').value,
+                        com: document.getElementById('com').value,
+                        start: document.getElementById('startTime').value,
+                        end: document.getElementById('endTime').value,
+                        notes: document.getElementById('dailyNotes').value
+                    },
+                    lastUpdated: new Date().toISOString(),
+                    lastOperator: operator,
+                    lastShift: document.getElementById('shift').value
+                };
+                
+                // جمع بيانات الجدول
+                document.querySelectorAll('.data-input').forEach(input => {
+                    if (input.value) {
+                        data.inputs[input.id] = input.value;
+                    }
+                });
+                
+                // حفظ في Supabase (إذا كان متصلاً)
+                let savedToCloud = false;
+                if (isOnline) {
+                    savedToCloud = await saveToSupabase(stationName, data);
+                }
+                
+                // حفظ في localStorage (نسخة احتياطية)
+                saveToLocalStorage(stationName, data);
+                
+                // حفظ في الكاش
+                stationDataCache[stationName] = data;
+                
+                // تحديث الواجهة
+                document.getElementById('currentStation').textContent = stationName;
+                document.getElementById('currentOperator').textContent = operator;
+                document.getElementById('lastUpdate').textContent = 'الآن';
+                
+                if (savedToCloud) {
+                    showNotification('تم حفظ البيانات على السحابة بنجاح', 'success');
+                } else {
+                    showNotification('تم حفظ البيانات محلياً', 'warning');
+                }
+                
+            } catch (error) {
+                console.error('Error saving data:', error);
+                showNotification('خطأ في حفظ البيانات', 'error');
+            } finally {
+                hideProgress();
+            }
+        }
+
+        // مزامنة البيانات
+        async function syncData() {
+            showProgress();
+            
+            try {
+                // تحميل جميع المحطات من السحابة
+                if (isOnline && supabase) {
+                    const { data: cloudStations, error } = await supabase
+                        .from('stations')
+                        .select('*');
+                    
+                    if (error) throw error;
+                    
+                    if (cloudStations) {
+                        cloudStations.forEach(station => {
+                            stationDataCache[station.station_id] = station.station_data;
+                            saveToLocalStorage(station.station_id, station.station_data);
+                        });
+                        
+                        showNotification(`تم مزامنة ${cloudStations.length} محطة`, 'success');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Sync error:', error);
+                showNotification('خطأ في المزامنة', 'error');
+            } finally {
+                hideProgress();
+            }
+        }
+
+        // ========== نظام localStorage ==========
+
+        function saveToLocalStorage(stationName, data) {
+            try {
+                localStorage.setItem(`station_${stationName}`, JSON.stringify(data));
+                localStorage.setItem('last_station', stationName);
+            } catch (e) {
+                console.error("Local storage save error:", e);
+            }
+        }
+
+        function loadFromLocalStorage(stationName) {
+            try {
+                const saved = localStorage.getItem(`station_${stationName}`);
+                return saved ? JSON.parse(saved) : null;
+            } catch (e) {
+                console.error("Local storage load error:", e);
+                return null;
+            }
+        }
+
+        // ========== الميزات الإضافية ==========
+
+        function calculateTotalHours() {
+            const startTime = document.getElementById("startTime").value;
+            const endTime = document.getElementById("endTime").value;
+
+            if (startTime && endTime) {
+                const start = new Date(`2000-01-01T${startTime}`);
+                const end = new Date(`2000-01-01T${endTime}`);
+
+                if (end < start) {
+                    end.setDate(end.getDate() + 1);
+                }
+
+                const diffMs = end - start;
+                const diffHours = diffMs / (1000 * 60 * 60);
+
+                document.getElementById("totalHours").value = diffHours.toFixed(2);
+            }
+        }
+
+        function addNewUnit() {
+            let maxUnitNumber = 2;
+            pumpUnits.forEach(unit => {
+                if (unit.type === "unit" && unit.unitNumber > maxUnitNumber) {
+                    maxUnitNumber = unit.unitNumber;
+                }
+            });
+
+            const nextUnitNumber = maxUnitNumber + 1;
+
+            if (nextUnitNumber > 9) {
+                alert("الحد الأقصى للوحدات هو 9 وحدات");
+                return;
+            }
+
+            const newUnit = {
+                name: `الوحدة رقم ${nextUnitNumber}`,
+                type: "unit",
+                unitNumber: nextUnitNumber,
+                items: [
+                    { name: "إجمالي عدد الساعات", id: `totalHours${nextUnitNumber}`, unit: "ساعة", inputType: "number", placeholder: "أدخل عدد الساعات" },
+                    { name: "فتحة محبس الطرد (%)", id: `valve${nextUnitNumber}`, unit: "%", inputType: "number", placeholder: "أدخل النسبة المئوية" },
+                    { name: "ضغط سحب المضخة", id: `suction${nextUnitNumber}`, unit: "بار", inputType: "number", placeholder: "أدخل الضغط بالبار" },
+                    { name: "ضغط طرد المضخة", id: `discharge${nextUnitNumber}`, unit: "بار", inputType: "number", placeholder: "أدخل الضغط بالبار" },
+                    { name: "حالة حرارة كرسي التحميل", id: `bearing${nextUnitNumber}`, unit: "°C", inputType: "mixed", placeholder: "أدخل الحرارة أو الحالة" },
+                    { name: "حالة الحشو", id: `seal${nextUnitNumber}`, unit: "", inputType: "text", placeholder: "أدخل حالة الحشو" },
+                    { name: "درجة حرارة الموتور", id: `motorTemp${nextUnitNumber}`, unit: "", inputType: "mixed", placeholder: "أدخل درجة الحرارة أو الحالة" },
+                    { name: "شدة تيار الموتور", id: `motorCurrent${nextUnitNumber}`, unit: "أمبير", inputType: "number", placeholder: "أدخل شدة التيار" }
+                ]
+            };
+
+            pumpUnits.push(newUnit);
+            generateTable();
+            showNotification('تم إضافة وحدة جديدة', 'success');
+        }
+
+        function resetForm() {
+            if (confirm("هل تريد إعادة تعيين جميع البيانات؟")) {
+                document.getElementById('operator-name').value = '';
+                document.getElementById('record-date').valueAsDate = new Date();
+                document.getElementById('shift').value = 'صباحية';
+                document.getElementById('waterPath').value = '';
+                document.getElementById('tank1Level').value = '';
+                document.getElementById('tank2Level').value = '';
+                document.getElementById('tank3Level').value = '';
+                document.getElementById('compressor1').value = '';
+                document.getElementById('compressor2').value = '';
+                document.getElementById('com').value = '';
+                document.getElementById('startTime').value = '06:00';
+                document.getElementById('endTime').value = '24:00';
+                document.getElementById('dailyNotes').value = '';
+                
+                document.querySelectorAll('.data-input').forEach(input => {
+                    input.value = '';
+                });
+                
+                calculateTotalHours();
+                showNotification('تم إعادة تعيين النموذج', 'info');
+            }
+        }
+
+        function exportToExcel() {
+            const stationName = document.getElementById('station-name').value || 'محطة';
+            
+            if (!stationName) {
+                showNotification('يرجى إدخال اسم المحطة', 'warning');
+                return;
+            }
+            
+            const wsData = [];
+            wsData.push([`سجل محطة ضخ - ${stationName}`]);
+            wsData.push([]);
+            wsData.push(["اسم المحطة", document.getElementById("station-name").value]);
+            wsData.push(["اسم المشغل", document.getElementById("operator-name").value]);
+            wsData.push(["التاريخ", document.getElementById("record-date").value]);
+            wsData.push(["الوردية", document.getElementById("shift").value]);
+            wsData.push([]);
+            wsData.push(["بيانات الوحدات"]);
+            wsData.push([]);
+
+            const tableHeaders = ["البيان", "6:00 ص", "11:00 ص", "4:00 م", "9:00 م", "2:00 ص"];
+            wsData.push(tableHeaders);
+
+            const rows = document.querySelectorAll("#pumpTable tbody tr");
+            rows.forEach(row => {
+                if (row.querySelector('.unit-header')) return;
+
+                const rowData = [];
+                const cells = row.querySelectorAll("td");
+                cells.forEach((cell, index) => {
+                    if (index === 0) {
+                        rowData.push(cell.textContent);
+                    } else if (index <= 5) {
+                        const input = cell.querySelector("input");
+                        rowData.push(input ? input.value : "");
+                    }
+                });
+                if (rowData.length > 0) {
+                    wsData.push(rowData);
+                }
+            });
+
+            wsData.push([]);
+            wsData.push(["بيانات إضافية"]);
+            wsData.push([]);
+
+            const additionalData = [
+                ["الطرق المائي", document.getElementById("waterPath").value],
+                ["مستوي المياه بالخزان الأول", document.getElementById("tank1Level").value],
+                ["مستوي المياه بالخزان الثاني", document.getElementById("tank2Level").value],
+                ["مستوي المياه بالخزان الثالث", document.getElementById("tank3Level").value],
+                ["مستوي الزيت بالضاغط الأول", document.getElementById("compressor1").value],
+                ["مستوي الزيت بالضاغط الثاني", document.getElementById("compressor2").value],
+                ["مستوي الزيت بالضاغط", document.getElementById("com").value],
+                ["توقيت تشغيل المحطة", document.getElementById("startTime").value],
+                ["توقيت إيقاف المحطة", document.getElementById("endTime").value],
+                ["عدد ساعات التشغيل", document.getElementById("totalHours").value],
+                ["ملاحظات اليوم", document.getElementById("dailyNotes").value]
+            ];
+
+            additionalData.forEach(item => {
+                wsData.push(item);
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            XLSX.utils.book_append_sheet(wb, ws, `محطة ${stationName}`);
+
+            const date = document.getElementById("record-date").value || new Date().toISOString().split("T")[0];
+            const fileName = `${stationName}_${date}.xlsx`;
+
+            XLSX.writeFile(wb, fileName);
+            showNotification("تم تصدير البيانات إلى ملف Excel", "success");
+        }
+
+        // ========== إعداد الأحداث ==========
+
+        function setupEventListeners() {
+            document.getElementById('backBtn').addEventListener('click', backToCards);
+            
+            document.getElementById('newStationBtn').addEventListener('click', () => {
+                currentStation = '';
+                document.getElementById('stationTitle').innerHTML = '<i class="fas fa-water"></i> محطة جديدة';
+                document.getElementById('currentStation').textContent = 'جديد';
+                document.getElementById('currentOperator').textContent = 'غير محدد';
+                document.getElementById('lastUpdate').textContent = 'غير متوفر';
+                document.getElementById('station-name').value = '';
+                document.getElementById('operator-name').value = '';
+                
+                document.getElementById('cardsSection').classList.remove('active');
+                document.getElementById('formSection').classList.add('active');
+                
+                generateTable();
+                resetForm();
+            });
+            
+            document.getElementById('refreshBtn').addEventListener('click', () => {
+                generateStationCards();
+                showNotification('تم تحديث قائمة المحطات', 'success');
+            });
+            
+            document.getElementById('saveBtn').addEventListener('click', saveStationData);
+            document.getElementById('syncBtn').addEventListener('click', syncData);
+            document.getElementById('printBtn').addEventListener('click', () => window.print());
+            document.getElementById('exportBtn').addEventListener('click', exportToExcel);
+            document.getElementById('addRowBtn').addEventListener('click', addNewUnit);
+            document.getElementById('resetBtn').addEventListener('click', resetForm);
+            
+            document.getElementById("startTime").addEventListener("change", calculateTotalHours);
+            document.getElementById("endTime").addEventListener("change", calculateTotalHours);
+            
+            document.getElementById('station-name').addEventListener('change', function() {
+                document.getElementById('currentStation').textContent = this.value || 'غير محدد';
+                if (this.value) {
+                    document.getElementById('stationTitle').innerHTML = `<i class="fas fa-water"></i> محطة ${this.value}`;
+                }
+            });
+        }
+
+        // ========== تهيئة التطبيق ==========
+
+        async function initializeApp() {
+            // تعيين التاريخ الحالي
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('record-date').value = today;
+            
+            // توليد الكروت
+            generateStationCards();
+            
+            // إعداد الأحداث
+            setupEventListeners();
+            
+            // تهيئة Supabase
+            await initializeSupabase();
+            
+            // حساب الساعات الافتراضية
+            calculateTotalHours();
+            
+            // تحميل آخر محطة
+            const lastStation = localStorage.getItem('last_station');
+            if (lastStation) {
+                document.getElementById('station-name').value = lastStation;
+                document.getElementById('currentStation').textContent = lastStation;
+            }
+        }
+
+        // تشغيل التطبيق
+        document.addEventListener('DOMContentLoaded', initializeApp);
     </script>
 </body>
 </html>
