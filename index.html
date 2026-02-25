@@ -13726,7 +13726,286 @@ window.openStationLogScreen = function() {
 
 </script>
 <script>
-  
+  // ============================================
+// سجل المحطة - نسخة بسيطة (البيانات تفضل موجودة)
+// ============================================
+
+// البيانات تحفظ في localStorage مؤقتاً
+const TEMP_KEY_PREFIX = 'station_log_temp_';
+
+// ========== دوال مساعدة ==========
+function getTempKey(station, date) {
+    return `${TEMP_KEY_PREFIX}${station}_${date}`;
+}
+
+// ========== جمع البيانات من النموذج ==========
+function collectFormData() {
+    const station = document.getElementById('station-log-select')?.value;
+    const date = document.getElementById('station-log-date')?.value;
+    
+    if (!station || !date) return null;
+    
+    const [y, m, d] = date.split('-');
+    const formattedDate = `${d}/${m}/${y}`;
+    
+    const data = {
+        station: station,
+        date: formattedDate,
+        operator: document.getElementById('station-log-operator')?.value || '',
+        shift: document.getElementById('station-log-shift')?.value || 'صباحية',
+        pumpReadings: {},
+        waterPath: document.getElementById('station-log-waterPath')?.value || '',
+        tank1: document.getElementById('station-log-tank1')?.value || '',
+        tank2: document.getElementById('station-log-tank2')?.value || '',
+        tank3: document.getElementById('station-log-tank3')?.value || '',
+        comp1: document.getElementById('station-log-comp1')?.value || '',
+        comp2: document.getElementById('station-log-comp2')?.value || '',
+        com: document.getElementById('station-log-com')?.value || '',
+        start: document.getElementById('station-log-start')?.value || '06:00',
+        end: document.getElementById('station-log-end')?.value || '24:00',
+        totalHours: document.getElementById('station-log-hours')?.value || '',
+        notes: document.getElementById('station-log-notes')?.value || ''
+    };
+    
+    document.querySelectorAll('.station-log-input').forEach(inp => {
+        if (inp.id) data.pumpReadings[inp.id] = inp.value || '';
+    });
+    
+    return data;
+}
+
+// ========== تطبيق البيانات على النموذج ==========
+function applyFormData(data) {
+    if (!data) return;
+    
+    document.getElementById('station-log-operator').value = data.operator || '';
+    document.getElementById('station-log-shift').value = data.shift || 'صباحية';
+    
+    if (data.pumpReadings) {
+        Object.keys(data.pumpReadings).forEach(id => {
+            const inp = document.getElementById(id);
+            if (inp) inp.value = data.pumpReadings[id] || '';
+        });
+    }
+    
+    document.getElementById('station-log-waterPath').value = data.waterPath || '';
+    document.getElementById('station-log-tank1').value = data.tank1 || '';
+    document.getElementById('station-log-tank2').value = data.tank2 || '';
+    document.getElementById('station-log-tank3').value = data.tank3 || '';
+    document.getElementById('station-log-comp1').value = data.comp1 || '';
+    document.getElementById('station-log-comp2').value = data.comp2 || '';
+    document.getElementById('station-log-com').value = data.com || '';
+    document.getElementById('station-log-start').value = data.start || '06:00';
+    document.getElementById('station-log-end').value = data.end || '24:00';
+    document.getElementById('station-log-hours').value = data.totalHours || '';
+    document.getElementById('station-log-notes').value = data.notes || '';
+    
+    if (typeof calculateStationLogHours === 'function') {
+        calculateStationLogHours();
+    }
+}
+
+// ========== حفظ مؤقت في localStorage ==========
+function saveTempData(data) {
+    if (!data || !data.station || !data.date) return;
+    
+    try {
+        const tempKey = getTempKey(data.station, data.date);
+        localStorage.setItem(tempKey, JSON.stringify(data));
+        console.log('✅ تم الحفظ المؤقت');
+    } catch (e) {
+        console.error('❌ فشل الحفظ المؤقت:', e);
+    }
+}
+
+// ========== تحميل من localStorage ==========
+function loadTempData(station, date) {
+    if (!station || !date) return null;
+    
+    try {
+        const [y, m, d] = date.split('-');
+        const formattedDate = `${d}/${m}/${y}`;
+        const tempKey = getTempKey(station, formattedDate);
+        const saved = localStorage.getItem(tempKey);
+        return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+        console.error('❌ فشل تحميل المؤقت:', e);
+        return null;
+    }
+}
+
+// ========== حفظ في Firebase ==========
+window.saveToFirebase = function() {
+    console.log('🔵 بدء الحفظ في Firebase...');
+    
+    const station = document.getElementById('station-log-select')?.value;
+    const date = document.getElementById('station-log-date')?.value;
+    
+    if (!station || !date) {
+        alert('❌ اختر المحطة والتاريخ أولاً');
+        return;
+    }
+    
+    const data = collectFormData();
+    if (!data) return;
+    
+    const saveBtn = document.getElementById('station-log-save');
+    const originalHtml = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+    
+    // حفظ في Firebase
+    firebase.database().ref(`stationLogs/${station}/${data.date}`).set(data)
+        .then(() => {
+            console.log('✅ تم الحفظ في Firebase');
+            
+            // بعد الحفظ في Firebase، احفظ نسخة مؤقتة في localStorage
+            saveTempData(data);
+            
+            alert('✅ تم حفظ البيانات');
+            
+            // تحديث آخر تحديث
+            const timeSpan = document.getElementById('station-log-timestamp');
+            if (timeSpan) {
+                const now = new Date();
+                timeSpan.textContent = now.toLocaleString('ar-EG');
+            }
+        })
+        .catch(error => {
+            console.error('❌ خطأ Firebase:', error);
+            alert('❌ فشل الحفظ: ' + error.message);
+        })
+        .finally(() => {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalHtml;
+        });
+};
+
+// ========== تحميل من Firebase (إذا لزم الأمر) ==========
+window.loadFromFirebase = function() {
+    console.log('🔵 بدء التحميل من Firebase...');
+    
+    const station = document.getElementById('station-log-select')?.value;
+    const date = document.getElementById('station-log-date')?.value;
+    
+    if (!station || !date) {
+        alert('❌ اختر المحطة والتاريخ أولاً');
+        return;
+    }
+    
+    const [y, m, d] = date.split('-');
+    const formattedDate = `${d}/${m}/${y}`;
+    
+    const loadBtn = document.getElementById('station-log-load');
+    const originalHtml = loadBtn.innerHTML;
+    loadBtn.disabled = true;
+    loadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل...';
+    
+    firebase.database().ref(`stationLogs/${station}/${formattedDate}`).once('value')
+        .then((snapshot) => {
+            if (!snapshot.exists()) {
+                alert('⚠️ لا توجد بيانات محفوظة');
+                return;
+            }
+            
+            const data = snapshot.val();
+            console.log('✅ تم استلام البيانات:', data);
+            
+            // تطبيق البيانات
+            applyFormData(data);
+            
+            // حفظ نسخة مؤقتة في localStorage
+            saveTempData(data);
+            
+            alert('✅ تم تحميل البيانات');
+        })
+        .catch(error => {
+            console.error('❌ خطأ في التحميل:', error);
+            alert('❌ فشل التحميل: ' + error.message);
+        })
+        .finally(() => {
+            loadBtn.disabled = false;
+            loadBtn.innerHTML = originalHtml;
+        });
+};
+
+// ========== تهيئة الشاشة (تحميل آخر البيانات) ==========
+function initStationLogScreen() {
+    console.log('🟢 تهيئة الشاشة...');
+    
+    // توليد الجدول
+    if (typeof generateStationLogTable === 'function') generateStationLogTable();
+    if (typeof populateStationLogStations === 'function') populateStationLogStations();
+    
+    // تعبئة المشغل
+    const operatorInput = document.getElementById('station-log-operator');
+    if (appData?.currentUser) {
+        operatorInput.value = appData.currentUser.username || appData.currentUser.name || 'مشغل';
+    }
+    
+    // تعبئة التاريخ
+    document.getElementById('station-log-date').valueAsDate = new Date();
+    
+    // تعبئة المحطة الحالية
+    const stationSelect = document.getElementById('station-log-select');
+    if (appData?.currentStation) {
+        stationSelect.value = appData.currentStation;
+    }
+    
+    // محاولة تحميل آخر البيانات المحفوظة
+    const station = stationSelect.value;
+    const date = document.getElementById('station-log-date').value;
+    
+    if (station && date) {
+        // 1. حاول تجيب من localStorage (النسخة المؤقتة)
+        const tempData = loadTempData(station, date);
+        if (tempData) {
+            console.log('📂 تم تحميل من localStorage');
+            applyFormData(tempData);
+        } else {
+            // 2. لو مفيش، حاول تجيب من Firebase
+            console.log('🌐 جاري التحميل من Firebase...');
+            setTimeout(() => {
+                window.loadFromFirebase();
+            }, 500);
+        }
+    }
+    
+    // حساب ساعات التشغيل
+    if (typeof calculateStationLogHours === 'function') calculateStationLogHours();
+    
+    console.log('✅ تمت التهيئة');
+}
+
+// ========== ربط الأزرار ==========
+document.addEventListener('DOMContentLoaded', function() {
+    // ربط زر الحفظ
+    const saveBtn = document.getElementById('station-log-save');
+    if (saveBtn) {
+        saveBtn.onclick = window.saveToFirebase;
+        console.log('✅ زر الحفظ مرتبط');
+    }
+    
+    // ربط زر التحميل
+    const loadBtn = document.getElementById('station-log-load');
+    if (loadBtn) {
+        loadBtn.onclick = window.loadFromFirebase;
+        console.log('✅ زر التحميل مرتبط');
+    }
+    
+    // ربط زر الإضافة
+    const addBtn = document.getElementById('station-log-add-row');
+    if (addBtn && typeof window.addStationLogUnit === 'function') {
+        addBtn.onclick = window.addStationLogUnit;
+        console.log('✅ زر الإضافة مرتبط');
+    }
+});
+
+// دالة فتح الشاشة
+window.openStationLogScreen = function() {
+    showScreen('station-log');
+    setTimeout(initStationLogScreen, 100);
+};
 </script>
 </body>
 </html>
